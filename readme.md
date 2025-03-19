@@ -1,7 +1,18 @@
-﻿## CVPR2022 - Anomaly Detection via Reverse Distillation from One-Class Embedding
- ## Implementation (Official Code ⭐️ ⭐️ ⭐️ )
+## Anomaly Detection via Reverse Distillation
 
-1. Environment
+This project is modified from the official code of [RD4AD](https://github.com/hq-deng/RD4AD) by [hq-deng](https://github.com/hq-deng), based on the paper:  
+
+**Anomaly Detection via Reverse Distillation from One-Class Embedding**  
+Hanqiu Deng and Xingyu Li  
+CVPR 2022  
+[https://arxiv.org/abs/2201.10703](https://arxiv.org/abs/2201.10703)  
+
+## What's Changed?
+- Added new preprocessing method
+- Added loss visualization
+- Tested with custom dataset from [Attention-based deep learning for chip-surface-defect detection](https://doi.org/10.1007/s00170-022-09425-4)
+
+## Library Install
 	> pytorch == 1.91
 	
 	> torchvision == 0.10.1
@@ -13,17 +24,20 @@
 	> sklearn == 1.0
 	
 	> PIL == 8.3.2
-2. Dataset
-    > You should download MVTec from [MVTec AD: MVTec Software](https://www.mvtec.com/company/research/datasets/mvtec-ad/). The folder "mvtec" should be unpacked into the code folder.
-3. Train and Test the Model
-We have write both training and evaluation function in the main.py, execute the following command to see the training and evaluation results.
-    > python main.py
-    
- ## Reference
-	@InProceedings{Deng_2022_CVPR,
-    author    = {Deng, Hanqiu and Li, Xingyu},
-    title     = {Anomaly Detection via Reverse Distillation From One-Class Embedding},
-    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-    month     = {June},
-    year      = {2022},
-    pages     = {9737-9746}}
+ 
+ ## Dataset
+Downnload dataset [MVTec](https://www.mvtec.com/company/research/datasets/mvtec-ad/) and unpack to folder *mvtec/*
+## Train and Test the Model
+To train the model with mvtec dataset
+```
+python main.py mvtec
+```
+To test 
+```
+python test.py test mvtec
+```
+To visualize image
+```
+python test.py visualize mvtec
+```
+
