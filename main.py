@@ -186,11 +186,11 @@ def train(dataset, _class_, filter=None, filter_name=None):
         loss_dict['train'][epoch] = np.mean(loss_list)
         loss_dict['val'][epoch] = validation(encoder, bn, decoder, val_dataloader, device)
 
-        print('epoch [{}/{}]: loss:{:.4f}, Time: {:.5f}s, {:.5f}s'.format(epoch + 1,
-                                                                 epochs,
-                                                                 loss_dict['train'][epoch],
-                                                                 time.time()-epoch_time,
-                                                                 val_time-epoch_time))
+        print('epoch [{}/{}]: loss:{:.4f}, Epoch time: {:.5f}s,  Validate time: {:.5f}s'.format(epoch + 1,
+                                                                                                epochs,
+                                                                                                loss_dict['train'][epoch],
+                                                                                                time.time()-epoch_time,
+                                                                                                val_time-epoch_time))
         if (epoch + 1) % 10 == 0:
             torch.save({'bn': bn.state_dict(),
                         'decoder': decoder.state_dict()}, ckp_path)
