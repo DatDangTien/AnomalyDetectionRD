@@ -1,0 +1,13 @@
+# Ignore folder
+dataset/
+checkpoints/
+result/
+train_logs/
+
+# Ignore Draft
+_*
+
+# Ignore backup
+*.zip
+
+# Other Ignore
