@@ -10,6 +10,7 @@ CVPR 2022
 ## What's Changed?
 - Added new preprocessing method
 - Added loss visualization
+- Modified test, visualize methods
 - Tested with custom dataset from [Attention-based deep learning for chip-surface-defect detection](https://doi.org/10.1007/s00170-022-09425-4)
 
 ## Library Install
