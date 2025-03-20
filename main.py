@@ -81,8 +81,11 @@ def validation(encoder, bn, decoder, val_dataloader, device):
 def train(dataset, _class_, filter=None, filter_name=None):
     print(_class_)
     start_time = time.time()
+    data_path = './dataset'
     if dataset == 'mvtec':
-        data_path = './dataset/mvtec/' + _class_
+        data_path = f'./dataset/mvtec/{_class_}'
+        if 'kaggle' in os.getcwd():
+            data_path = f'/kaggle/input/mvtec-ad/{_class_}'
         ckp_path = './checkpoints/mvtec/'
         if not os.path.isdir(ckp_path):
             os.makedirs(ckp_path)
@@ -99,6 +102,8 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                  transform=get_data_transforms(image_size, image_size, mean_std, filter=filter))
     else:
         data_path = './dataset/gfc'
+        if 'kaggle' in os.getcwd():
+            data_path = f'/kaggle/input/gfc-ad'
         ckp_path = f'./checkpoints/gfc/'
         if filter:
             ckp_path += filter_name + '/'
