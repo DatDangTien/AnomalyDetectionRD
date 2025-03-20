@@ -14,17 +14,17 @@ CVPR 2022
 - Tested with custom dataset **GFC** from [Attention-based deep learning for chip-surface-defect detection](https://doi.org/10.1007/s00170-022-09425-4)
 
 ## Library Install
-	> pytorch == 1.9.1
-	
-	> torchvision == 0.10.1
-	
-	> numpy == 1.20.3
-	
-	> scipy == 1.7.1
-	
-	> sklearn == 1.0
-	
-	> PIL == 8.3.2
+```commandline
+pip install torch==1.9.1+cu111 torchvision==0.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+pip install numpy==1.20.3
+pip install scipy == 1.7.1
+pip install scikit-learn==1.0.1
+pip install scikit-image==0.18.3
+pip install pillow==8.3.2
+pip install opencv-python==3.4.14.53
+pip install matplotlib==3.4.3
+pip install pandas==1.3.5
+```
  
  ## Dataset
 - **MVTec:** [Download](https://www.mvtec.com/company/research/datasets/mvtec-ad/) and unpack to folder *./dataset/mvtec/*
