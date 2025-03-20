@@ -80,17 +80,6 @@ def validation(encoder, bn, decoder, val_dataloader, device):
 
 def train(dataset, _class_, filter=None, filter_name=None):
     print(_class_)
-    # epochs = 100
-    epochs = 40
-    learning_rate = 0.005
-    # batch_size = 16
-    batch_size = 8
-    image_size = 256
-    backbone = 'wres101'
-
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(device)
-
     start_time = time.time()
     if dataset == 'mvtec':
         data_path = './dataset/mvtec/' + _class_
@@ -151,13 +140,15 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                                  collate_fn=train_collate, num_workers=4)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
-    # encoder, bn = wide_resnet50_2(pretrained=True)
-    encoder, bn = wide_resnet101_2(pretrained=True)
+    if backbone == 'wres50':
+        encoder, bn = wide_resnet50_2(pretrained=True)
+        decoder = de_wide_resnet50_2(pretrained=False)
+    elif backbone == 'wres101':
+        encoder, bn = wide_resnet101_2(pretrained=True)
+        decoder = de_wide_resnet101_2(pretrained=False)
     encoder = encoder.to(device)
-    bn = bn.to(device)
     encoder.eval()
-    # decoder = de_wide_resnet50_2(pretrained=False)
-    decoder = de_wide_resnet101_2(pretrained=False)
+    bn = bn.to(device)
     decoder = decoder.to(device)
 
     optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters()), lr=learning_rate, betas=(0.5,0.999))
@@ -211,6 +202,17 @@ def train(dataset, _class_, filter=None, filter_name=None):
 if __name__ == '__main__':
     SEED = 111
     setup_seed(SEED)
+
+    # epochs = 100
+    epochs = 40
+    learning_rate = 0.005
+    # batch_size = 16
+    batch_size = 8
+    image_size = 256
+    backbone = 'wres101'
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(device)
+
     item_list = []
     if sys.argv[1] == 'mvtec':
         if len(sys.argv) > 2:

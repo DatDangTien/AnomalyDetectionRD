@@ -3,8 +3,8 @@ from dataset import load_data
 from torchvision.datasets import ImageFolder
 import numpy as np
 from torch.utils.data import DataLoader
-from resnet import resnet18, resnet34, resnet50, wide_resnet50_2
-from de_resnet import de_resnet18, de_resnet50, de_wide_resnet50_2
+from resnet import resnet18, resnet34, resnet50, wide_resnet50_2, wide_resnet101_2
+from de_resnet import de_resnet18, de_resnet50, de_wide_resnet50_2, de_wide_resnet101_2
 from dataset import MVTecDataset, GFCDataset, get_data_transforms
 from torch.nn import functional as F
 from sklearn.metrics import roc_auc_score, average_precision_score, auc, roc_curve
@@ -143,14 +143,11 @@ def evaluation(encoder, bn, decoder, dataloader, device, _class_=None, predict=N
     return auroc_px, auroc_sp, aupro_sp, ap_px, ap_sp, overkill, underkill
 
 def test(dataset, _class_):
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(device)
     print(_class_)
 
     test_path = f'./dataset/mvtec/' + _class_ if dataset == 'mvtec' else './dataset/gfc'
-    # ckp_path = './checkpoints/' + 'rm_1105_wres50_ff_mm_' + _class_ + '.pth'
-    ckp_path = f'./checkpoints/{dataset}/' + 'wres50_' + _class_ + '.pth'
-    predict_path = f'./result/{dataset}/predict/'
+    ckp_path = f'./checkpoints/{dataset}/{backbone}_' + _class_ + '.pth'
+    predict_path = f'./result/{dataset}/{backbone}/predict/'
     if not os.path.isdir(predict_path):
         os.makedirs(predict_path)
     predict_path += _class_ + '_predict.txt'
@@ -162,18 +159,24 @@ def test(dataset, _class_):
     except:
         mean_std = None
     print(mean_std)
-    transform = get_data_transforms(IMAGE_SIZE, IMAGE_SIZE, mean_std)
+    transform = get_data_transforms(image_size, image_size, mean_std)
 
     if dataset == 'mvtec':
-        test_data = MVTecDataset(root=test_path, image_size=IMAGE_SIZE, phase="test", transform=transform)
+        test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
     else:
-        test_data = GFCDataset(root=test_path, image_size=IMAGE_SIZE, phase="test", transform=transform)
+        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
-    encoder, bn = wide_resnet50_2(pretrained=True)
+
+    print(backbone)
+    if backbone == 'wres50':
+        encoder, bn = wide_resnet50_2(pretrained=True)
+        decoder = de_wide_resnet50_2(pretrained=False)
+    elif backbone == 'wres101':
+        encoder, bn = wide_resnet101_2(pretrained=True)
+        decoder = de_wide_resnet101_2(pretrained=False)
     encoder = encoder.to(device)
-    bn = bn.to(device)
     encoder.eval()
-    decoder = de_wide_resnet50_2(pretrained=False)
+    bn = bn.to(device)
     decoder = decoder.to(device)
     ckp = torch.load(ckp_path)
     for k, v in list(ckp['bn'].items()):
@@ -187,14 +190,12 @@ def test(dataset, _class_):
 
 def visualize(dataset, _class_):
     print(_class_)
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(device)
 
     test_path = './dataset/mvtec/' + _class_ if dataset == 'mvtec' else './dataset/gfc'
     # ckp_path = './checkpoints/' + 'rm_1105_wres50_ff_mm_'+_class_+'.pth'
-    ckp_path = f'./checkpoints/{dataset}/' + 'wres50_'+_class_+'.pth'
+    ckp_path = f'./checkpoints/{dataset}/{backbone}_{_class_}.pth'
 
-    result_path = f'./result/{dataset}/images/'
+    result_path = f'./result/{dataset}/{backbone}/images/'
     result_path += f'{_class_}/' if dataset == 'mvtec' else ''
     if os.path.isdir(result_path):
         shutil.rmtree(result_path)
@@ -216,20 +217,24 @@ def visualize(dataset, _class_):
     except:
         mean_std = None
     print(mean_std)
-    transform = get_data_transforms(IMAGE_SIZE, IMAGE_SIZE, mean_std)
+    transform = get_data_transforms(image_size, image_size, mean_std)
 
     if dataset == 'mvtec':
-        test_data = MVTecDataset(root=test_path, image_size=IMAGE_SIZE, phase="test", transform=transform)
+        test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
     else:
-        test_data = GFCDataset(root=test_path, image_size=IMAGE_SIZE, phase="test", transform=transform)
+        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
-    encoder, bn = wide_resnet50_2(pretrained=True)
+    print(backbone)
+    if backbone == 'wres50':
+        encoder, bn = wide_resnet50_2(pretrained=True)
+        decoder = de_wide_resnet50_2(pretrained=False)
+    elif backbone == 'wres101':
+        encoder, bn = wide_resnet101_2(pretrained=True)
+        decoder = de_wide_resnet101_2(pretrained=False)
     encoder = encoder.to(device)
-    bn = bn.to(device)
-
     encoder.eval()
-    decoder = de_wide_resnet50_2(pretrained=False)
+    bn = bn.to(device)
     decoder = decoder.to(device)
     ckp = torch.load(ckp_path)
     for k, v in list(ckp['bn'].items()):
@@ -260,7 +265,8 @@ def visualize(dataset, _class_):
             #t_sne(inputs)
 
 
-            anomaly_map, amap_list = cal_anomaly_map([inputs[-1]], [outputs[-1]], img.shape[-1], amap_mode='a')
+            # anomaly_map, amap_list = cal_anomaly_map([inputs[-1]], [outputs[-1]], img.shape[-1], amap_mode='a')
+            anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             ano_map = min_max_norm(anomaly_map)
             ano_map = cvt2heatmap(ano_map*255)
@@ -497,7 +503,11 @@ def detection(encoder, bn, decoder, dataloader,device,_class_):
 
 import sys
 if __name__ == '__main__':
-    IMAGE_SIZE = 256
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(device)
+    backbone = 'wres101'
+    image_size = 256
+    
     item_list = []
     res_path = ''
     if sys.argv[2] == 'mvtec':
@@ -506,10 +516,10 @@ if __name__ == '__main__':
         else:
             item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
                          'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
-        res_path = './result/mvtec/'
+        res_path = f'./result/mvtec/'
     elif sys.argv[2] == 'gfc':
         item_list = ['gfc']
-        res_path = './result/gfc/'
+        res_path = f'./result/gfc/'
 
     if sys.argv[1] == 'test':
         if not os.path.isdir(res_path):
@@ -517,6 +527,8 @@ if __name__ == '__main__':
         res_path += 'benchmark.txt'
         res_list = []
         with open(res_path, 'a') as f:
+            f.write('----------------------------\n')
+            f.write(backbone + '\n')
             f.write('\tauroc_px, auroc_sp, aupro_px, ap_px, ap_sp, overkill, underkill\n')
             for i in item_list:
                 res_class = globals()[sys.argv[1]](sys.argv[2], i)
