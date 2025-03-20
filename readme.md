@@ -28,21 +28,24 @@ CVPR 2022
  
  ## Dataset
 - **MVTec:** [Download](https://www.mvtec.com/company/research/datasets/mvtec-ad/) and unpack to folder *./dataset/mvtec/*
-- **GFC:** [Download](https://pan.baidu.com/s/1DsZyyO4ITtsLWqFyGS2KEA) and unpack to folder *./dataset/gfc/*
+- **GFC:** [Download](https://pan.baidu.com/s/1DsZyyO4ITtsLWqFyGS2KEA) and unpack to folder *./dataset/gfc/*, then run:
+```commandline
+python gfc.py
+```
 
 ## Train and Test the Model
 To train the model with mvtec dataset
-```
+```commandline
 python main.py mvtec
 python main.py gfc
 ```
 To test -> *./result/{dataset}/benchmark.txt*
-```
+```commandline
 python test.py test mvtec
 python test.py test gfc
 ```
 To visualize image -> *./result/{dataset}/images/*
-```
+```commandline
 python test.py visualize mvtec
 python test.py visualize gfc
 ```
