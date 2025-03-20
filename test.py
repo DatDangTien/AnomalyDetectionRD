@@ -145,7 +145,11 @@ def evaluation(encoder, bn, decoder, dataloader, device, _class_=None, predict=N
 def test(dataset, _class_):
     print(_class_)
 
-    test_path = f'./dataset/mvtec/' + _class_ if dataset == 'mvtec' else './dataset/gfc'
+    if 'kaggle' in os.getcwd():
+        test_path = f'/kaggle/input/{dataset}-ad'
+    else:
+        test_path = f'./dataset/{dataset}'
+    test_path += '/' + _class_ if dataset == 'mvtec' else ''
     ckp_path = f'./checkpoints/{dataset}/{backbone}_' + _class_ + '.pth'
     predict_path = f'./result/{dataset}/{backbone}/predict/'
     if not os.path.isdir(predict_path):
@@ -191,8 +195,12 @@ def test(dataset, _class_):
 def visualize(dataset, _class_):
     print(_class_)
 
-    test_path = './dataset/mvtec/' + _class_ if dataset == 'mvtec' else './dataset/gfc'
-    # ckp_path = './checkpoints/' + 'rm_1105_wres50_ff_mm_'+_class_+'.pth'
+    if 'kaggle' in os.getcwd():
+        test_path = f'/kaggle/input/{dataset}-ad'
+    else:
+        test_path = f'./dataset/{dataset}'
+    test_path += '/' + _class_ if dataset == 'mvtec' else ''
+
     ckp_path = f'./checkpoints/{dataset}/{backbone}_{_class_}.pth'
 
     result_path = f'./result/{dataset}/{backbone}/images/'
