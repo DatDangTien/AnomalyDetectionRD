@@ -14,7 +14,7 @@ CVPR 2022
 - Tested with custom dataset **GFC** from [Attention-based deep learning for chip-surface-defect detection](https://doi.org/10.1007/s00170-022-09425-4)
 
 ## Library Install
-	> pytorch == 1.91
+	> pytorch == 1.9.1
 	
 	> torchvision == 0.10.1
 	
