@@ -89,6 +89,9 @@ def train_collate(batch):
     label = torch.tensor([item[2] for item in batch])
     return img, label
 
+def path_format(path:str ) -> str:
+    return path.replace('\\', '/')
+
 class GFCDataset(torch.utils.data.Dataset):
     def __init__(self, root, image_size, phase, transform=None, filter=None):
         if phase == 'train':
@@ -120,13 +123,15 @@ class GFCDataset(torch.utils.data.Dataset):
         for defect_type in defect_types:
             if defect_type == 'good':
                 img_paths = glob.glob(os.path.join(self.img_path, defect_type) + "/*.bmp")
-                img_paths.sort(key=lambda x: int(x.split('\\')[-1].split('.')[0]))
+                img_paths = list(map(path_format, img_paths))
+                img_paths.sort(key=lambda x: int(x.split('/')[-1].split('.')[0]))
                 img_tot_paths.extend(img_paths)
                 tot_labels.extend([0] * len(img_paths))
                 tot_types += (['good'] * len(img_paths))
             elif defect_type == 'defect':
                 img_paths = glob.glob(os.path.join(self.img_path, defect_type) + "/*.bmp")
-                img_paths.sort(key=lambda x: int(x.split('\\')[-1].split('_')[0]))
+                img_paths = list(map(path_format, img_paths))
+                img_paths.sort(key=lambda x: int(x.split('/')[-1].split('_')[0]))
                 img_tot_paths.extend(img_paths)
                 tot_labels.extend([1] * len(img_paths))
                 # type_tot_paths = glob.glob(os.path.join(self.img_path, 'label') + "/*.txt")
@@ -213,7 +218,8 @@ class MVTecDataset(torch.utils.data.Dataset):
         for defect_type in defect_types:
             if defect_type == 'good':
                 img_paths = glob.glob(os.path.join(self.img_path, defect_type) + "/*.png")
-                img_paths.sort(key=lambda x: int(x.split('\\')[-1].split('.')[0]))
+                img_paths = list(map(path_format, img_paths))
+                img_paths.sort(key=lambda x: int(x.split('/')[-1].split('.')[0]))
                 img_tot_paths.extend(img_paths)
                 gt_tot_paths.extend([0] * len(img_paths))
                 tot_labels.extend([0] * len(img_paths))
@@ -221,8 +227,10 @@ class MVTecDataset(torch.utils.data.Dataset):
             else:
                 img_paths = glob.glob(os.path.join(self.img_path, defect_type) + "/*.png")
                 gt_paths = glob.glob(os.path.join(self.gt_path, defect_type) + "/*.png")
-                img_paths.sort(key=lambda x: int(x.split('\\')[-1].split('.')[0]))
-                gt_paths.sort(key=lambda x: int(x.split('\\')[-1].split('_')[0]))
+                img_paths = list(map(path_format, img_paths))
+                gt_paths = list(map(path_format, gt_paths))
+                img_paths.sort(key=lambda x: int(x.split('/')[-1].split('.')[0]))
+                gt_paths.sort(key=lambda x: int(x.split('/')[-1].split('_')[0]))
                 img_tot_paths.extend(img_paths)
                 gt_tot_paths.extend(gt_paths)
                 tot_labels.extend([1] * len(img_paths))
