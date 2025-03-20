@@ -182,7 +182,7 @@ def test(dataset, _class_):
     encoder.eval()
     bn = bn.to(device)
     decoder = decoder.to(device)
-    ckp = torch.load(ckp_path)
+    ckp = torch.load(ckp_path, map_location=device)
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:
             ckp['bn'].pop(k)
@@ -244,7 +244,7 @@ def visualize(dataset, _class_):
     encoder.eval()
     bn = bn.to(device)
     decoder = decoder.to(device)
-    ckp = torch.load(ckp_path)
+    ckp = torch.load(ckp_path, map_location=device)
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:
             ckp['bn'].pop(k)
@@ -331,7 +331,7 @@ def vis_nd(name, _class_):
     decoder = de_resnet18(pretrained=False)
     decoder = decoder.to(device)
 
-    ckp = torch.load(ckp_path)
+    ckp = torch.load(ckp_path, map_location=device)
 
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
