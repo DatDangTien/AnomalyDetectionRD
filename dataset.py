@@ -147,6 +147,7 @@ class GFCDataset(torch.utils.data.Dataset):
             # self.train = False
         self.img_paths = root
         self.mean, self.std = None, None
+        # load dataset
         self.img_paths, self.labels = self.load_dataset()  # self.labels => good : 0, anomaly : 1
         if transform:
             self.transform, self.gt_transform = transform
@@ -154,7 +155,7 @@ class GFCDataset(torch.utils.data.Dataset):
             self.transform, self.gt_transform = get_data_transforms(image_size, image_size, (self.mean, self.std), filter)
         else:
             self.transform, self.gt_transform = get_data_transforms(image_size, image_size, (self.mean, self.std))
-        # load dataset
+        self.metadata = {}
 
     def load_dataset(self):
 
@@ -198,7 +199,7 @@ class GFCDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         img_path, label = self.img_paths[idx], self.labels[idx]
         # img = Image.open(img_path).convert('RGB')
-        img, box = imread_center(img_path)
+        img, self.metadata[idx] = imread_center(img_path)
         img = self.transform(img)
 
         # gt = self.gt_transform(img.copy())
@@ -217,7 +218,7 @@ class GFCDataset(torch.utils.data.Dataset):
         else:
             img_type = img_type[typ_pos + 1:]
 
-        return img, gt, label, img_type, box
+        return img, gt, label, img_type
 
     def get_meta_data(self):
         if self.mean:
