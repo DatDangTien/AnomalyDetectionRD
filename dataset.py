@@ -1,3 +1,4 @@
+import cv2
 import numpy
 from torchvision import transforms
 from PIL import Image
@@ -92,6 +93,50 @@ def train_collate(batch):
 def path_format(path:str ) -> str:
     return path.replace('\\', '/')
 
+def imread_center(img_path):
+    img = cv2.imread(img_path)
+
+    blur = cv2.GaussianBlur(img, (7, 7), 0)
+    # canny = cv2.Canny(blur, 100, 200)
+    # morph = canny
+    kernel = np.ones((5, 5), np.uint8)
+    morph = cv2.morphologyEx(blur, cv2.MORPH_GRADIENT, kernel)
+    morph = cv2.cvtColor(morph, cv2.COLOR_BGR2GRAY)
+    _, thres = cv2.threshold(morph, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    cnts = cv2.findContours(thres, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[-2]
+
+    # Filter Contour
+    good_cnts = []
+    h, w = thres.shape
+    center_point = (w // 2, h // 2)
+    for c in cnts:
+        x, y, w, h = cv2.boundingRect(c)
+        ratio = h / w
+        # area = cv2.contourArea(c)
+        area = h * w
+        img_area = thres.shape[0] * thres.shape[1]
+        if 0.5 < ratio < 2 and img_area * 0.15 < area < img_area * 0.9:
+            good_cnts.append(c)
+
+    if good_cnts:
+        good_cnts.sort(key=lambda x: abs(cv2.pointPolygonTest(x, center_point, True)))
+        # print(i, img_type)
+        # for c in good_cnts:
+        #     x, y, w, h = cv2.boundingRect(c)
+        #     cv2.rectangle(img, (x,y), (x+w, y+h), (255, 0, 0), 1)
+            # print(center_point)
+            # print(abs(cv2.pointPolygonTest(c, center_point, True)))
+        x, y, w, h = cv2.boundingRect(good_cnts[0])
+        img = img[y:y+h, x:x+w]
+        # cv2.rectangle(img, (x,y), (x+w,y+h), (0,0, 255), 1)
+        # cv2.imwrite(f'{out_path}{i}_{img_type}.bmp', out_img)
+
+    else:
+        x, y, w, h = 0, 0, img.shape[1], img.shape[0]
+
+    return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)), (x, y, w, h)
+
+
 class GFCDataset(torch.utils.data.Dataset):
     def __init__(self, root, image_size, phase, transform=None, filter=None):
         if phase == 'train':
@@ -114,9 +159,7 @@ class GFCDataset(torch.utils.data.Dataset):
     def load_dataset(self):
 
         img_tot_paths = []
-        gt_tot_paths = []
         tot_labels = []
-        tot_types = []
 
         defect_types = os.listdir(self.img_path)
 
@@ -127,29 +170,25 @@ class GFCDataset(torch.utils.data.Dataset):
                 img_paths.sort(key=lambda x: int(x.split('/')[-1].split('.')[0]))
                 img_tot_paths.extend(img_paths)
                 tot_labels.extend([0] * len(img_paths))
-                tot_types += (['good'] * len(img_paths))
             elif defect_type == 'defect':
                 img_paths = glob.glob(os.path.join(self.img_path, defect_type) + "/*.bmp")
                 img_paths = list(map(path_format, img_paths))
                 img_paths.sort(key=lambda x: int(x.split('/')[-1].split('_')[0]))
                 img_tot_paths.extend(img_paths)
                 tot_labels.extend([1] * len(img_paths))
-                # type_tot_paths = glob.glob(os.path.join(self.img_path, 'label') + "/*.txt")
-                # for type_path in type_tot_paths:
-                #     with open(type_path, 'r') as f:
-                #         lines = f.readlines()
-                #         types = '-'.join([line.strip() for line in lines])
-                #     tot_types += [types]
+
 
         #     Compute mean and std
-        img_list_px = []
-        for img_path in img_tot_paths:
-            img = Image.open(img_path).convert('RGB')
-            img_list_px.extend(np.array(img).ravel())
-        self.mean = round(np.mean(img_list_px) / 255, 3)
-        self.std = round(np.std(img_list_px) / 255, 3)
-        self.mean = [self.mean] * 3
-        self.std = [self.std] * 3
+        # img_list_px = []
+        # for img_path in img_tot_paths:
+        #     img = Image.open(img_path).convert('RGB')
+        #     img_list_px.extend(np.array(img).ravel())
+        # self.mean = round(np.mean(img_list_px) / 255, 3)
+        # self.std = round(np.std(img_list_px) / 255, 3)
+        # self.mean = [self.mean] * 3
+        # self.std = [self.std] * 3
+        self.mean = [0.5] * 3
+        self.std = [0.5] * 3
 
         return img_tot_paths, tot_labels
 
@@ -158,7 +197,8 @@ class GFCDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         img_path, label = self.img_paths[idx], self.labels[idx]
-        img = Image.open(img_path).convert('RGB')
+        # img = Image.open(img_path).convert('RGB')
+        img, box = imread_center(img_path)
         img = self.transform(img)
 
         # gt = self.gt_transform(img.copy())
@@ -177,7 +217,7 @@ class GFCDataset(torch.utils.data.Dataset):
         else:
             img_type = img_type[typ_pos + 1:]
 
-        return img, gt, label, img_type
+        return img, gt, label, img_type, box
 
     def get_meta_data(self):
         if self.mean:
