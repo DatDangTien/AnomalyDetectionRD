@@ -138,7 +138,7 @@ def imread_center(img_path):
 
 
 class GFCDataset(torch.utils.data.Dataset):
-    def __init__(self, root, image_size, phase, transform=None, filter=None):
+    def __init__(self, root, image_size, phase, transform=None, filter=None, cropped=True):
         if phase == 'train':
             self.img_path = os.path.join(root, 'train')
             # self.train = True
@@ -146,6 +146,8 @@ class GFCDataset(torch.utils.data.Dataset):
             self.img_path = os.path.join(root, 'test')
             # self.train = False
         self.img_paths = root
+        self.metadata = {}
+        self.cropped = cropped
         self.mean, self.std = None, None
         # load dataset
         self.img_paths, self.labels = self.load_dataset()  # self.labels => good : 0, anomaly : 1
@@ -155,7 +157,6 @@ class GFCDataset(torch.utils.data.Dataset):
             self.transform, self.gt_transform = get_data_transforms(image_size, image_size, (self.mean, self.std), filter)
         else:
             self.transform, self.gt_transform = get_data_transforms(image_size, image_size, (self.mean, self.std))
-        self.metadata = {}
 
     def load_dataset(self):
 
@@ -198,9 +199,11 @@ class GFCDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         img_path, label = self.img_paths[idx], self.labels[idx]
-        # img = Image.open(img_path).convert('RGB')
-        img, self.metadata[idx] = imread_center(img_path)
-        img = self.transform(img)
+        if self.cropped:
+            img, self.metadata[idx] = imread_center(img_path)
+            img = self.transform(img)
+        else:
+            img = Image.open(img_path).convert('RGB')
 
         # gt = self.gt_transform(img.copy())
         # img = self.transform(img)

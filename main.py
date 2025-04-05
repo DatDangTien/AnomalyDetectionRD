@@ -184,7 +184,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
         loss_dict['train'][epoch] = np.mean(loss_list)
         loss_dict['val'][epoch] = validation(encoder, bn, decoder, val_dataloader, device)
 
-        print('epoch [{}/{}]: loss:{:.4f}, Epoch time: {:.5f}s,  Validate time: {:.5f}s'.format(epoch + 1,
+        print('epoch [{}/{}]: loss:{:.4f}, Epoch time: {:.5f}s,  Train time: {:.5f}s'.format(epoch + 1,
                                                                                                 epochs,
                                                                                                 loss_dict['train'][epoch],
                                                                                                 time.time()-epoch_time,

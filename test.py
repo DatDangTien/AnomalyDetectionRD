@@ -137,7 +137,7 @@ def evaluation(encoder, bn, decoder, dataloader, device, _class_=None, predict=N
             with open(predict, 'w') as f:
                 f.write('Threshold: {}\n'.format(round(thres[optimal_ind], 3)))
                 for i in range(len(pr_list)):
-                    f.write('{}, {} {}\n'.format(i + 1, pr_list[i], round(pr_list_sp[i], 3)))
+                    f.write('{}, {} {}\n'.format(i, pr_list[i], round(pr_list_sp[i], 3)))
 
 
     return auroc_px, auroc_sp, aupro_sp, ap_px, ap_sp, overkill, underkill
@@ -231,6 +231,7 @@ def visualize(dataset, _class_):
         test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
     else:
         test_data = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
+        test_data_ori = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform, cropped=False)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
     print(backbone)
@@ -253,7 +254,7 @@ def visualize(dataset, _class_):
 
     count = 0
     with torch.no_grad():
-        for img, gt, label, typ in test_dataloader:
+        for idx, (img, gt, label, typ) in enumerate(test_dataloader):
 
             # if (label.item() == 0):
             #     continue
@@ -272,16 +273,39 @@ def visualize(dataset, _class_):
             #inputs.append(outputs)
             #t_sne(inputs)
 
+            # padding to original size
+            # heat map
+            # read ori img
+            # concat
 
             # anomaly_map, amap_list = cal_anomaly_map([inputs[-1]], [outputs[-1]], img.shape[-1], amap_mode='a')
             anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             ano_map = min_max_norm(anomaly_map)
-            ano_map = cvt2heatmap(ano_map*255)
-            img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
-            # img = img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255
+
+            # Padding with uncropped image
+            if dataset == 'gfc':
+                uncrop_img = np.array(test_data_ori[idx][0])
+                img = cv2.cvtColor(uncrop_img, cv2.COLOR_RGB2BGR)
+                x, y, w, h = test_data.metadata[idx]
+                pad_ano_map = np.zeros((img.shape[0], img.shape[1]))
+                # Scale down anomaly map
+                ano_map = cv2.resize(ano_map, (w, h), interpolation=cv2.INTER_LINEAR)
+                assert pad_ano_map[y: y+h, x: x+w].shape == ano_map.shape, "Padding anomaly map shape must be same as anomaly map shape"
+                pad_ano_map[y: y+h, x: x+w] = ano_map
+                ano_map = pad_ano_map
+            else:
+                img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
+                # img = img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255
+
             img = np.uint8(min_max_norm(img)*255)
+            ano_map = cvt2heatmap(ano_map*255)
             ano_map = show_cam_on_image(img, ano_map)
+
+            # Draw crop box
+            if dataset == 'gfc':
+                x, y, w, h = test_data.metadata[idx]
+                cv2.rectangle(ano_map, (x, y), (x+w, y+h), (0, 0, 255), 1)
 
             cv2.imwrite('{}{}_{}.png'.format(result_ori, count, typ[0]), img)
             cv2.imwrite('{}{}_{}.png'.format(result_heat, count, typ[0]), ano_map)
@@ -513,7 +537,8 @@ import sys
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
-    backbone = 'wres101'
+    # backbone = 'wres101'
+    backbone = 'wres50'
     image_size = 256
     
     item_list = []
