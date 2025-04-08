@@ -5,8 +5,7 @@ try:
     from torch.hub import load_state_dict_from_url
 except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
-from typing import Type, Any, Callable, Union, List, Optional
-
+from typing import Type, Any, Callable, Union, List, Optional, Tuple
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
@@ -543,7 +542,7 @@ def resnext101_32x8d(pretrained: bool = False, progress: bool = True, **kwargs: 
                    pretrained, progress, **kwargs)
 
 
-def wide_resnet50_2(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def wide_resnet50_2(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> Tuple[ResNet, BN_layer]:
     r"""Wide ResNet-50-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_.
     The model is the same as ResNet except for the bottleneck number of channels
@@ -564,7 +563,7 @@ def wide_resnet101_2(pretrained: bool = False, progress: bool = True, **kwargs: 
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_.
     The model is the same as ResNet except for the bottleneck number of channels
     which is twice larger in every block. The number of channels in outer 1x1
-    convolutions is the same, e.g. last block in ResNet-50 has 2048-512-2048
+    convolutions is the same, e.g. last block in ResNet-50 has 2048-512-2048fcv9
     channels, and in Wide ResNet-50-2 has 2048-1024-2048.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet

@@ -539,7 +539,7 @@ if __name__ == '__main__':
     print(device)
     # backbone = 'wres101'
     backbone = 'wres50'
-    image_size = 256
+    image_size = 128
     
     item_list = []
     res_path = ''
@@ -562,6 +562,7 @@ if __name__ == '__main__':
         with open(res_path, 'a') as f:
             f.write('----------------------------\n')
             f.write(backbone + '\n')
+            f.write(str(image_size) + '\n')
             f.write('\tauroc_px, auroc_sp, aupro_px, ap_px, ap_sp, overkill, underkill\n')
             for i in item_list:
                 res_class = globals()[sys.argv[1]](sys.argv[2], i)
