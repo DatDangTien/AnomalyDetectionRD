@@ -21,10 +21,12 @@ def GFC_format():
     test_path = os.path.join(data_path, 'test')
     train_path = os.path.join(data_path, 'train/good')
 
-    if not os.path.isdir(test_path):
-        os.mkdir(test_path)
-    if not os.path.isdir(train_path):
-        os.makedirs(train_path)
+    if os.path.isdir(test_path):
+        shutil.rmtree(test_path)
+    os.makedirs(test_path)
+    if os.path.isdir(train_path):
+        shutil.rmtree(train_path)
+    os.makedirs(train_path)
 
     im_non_defect_tot_paths = glob.glob(os.path.join(data_path, 'defect-free images') + "/*.bmp")
     sub_defect_paths = glob.glob(os.path.join(data_path, 'defect images') + "/*")
@@ -36,7 +38,7 @@ def GFC_format():
 
     # Train_set
     # for _ in range(len(im_non_defect_tot_paths) // 4):
-    for i in range(800):
+    for i in range(int(len(im_non_defect_tot_paths) * 0.7)):
         rand_idx = random.randint(0, len(im_non_defect_tot_paths)-1)
         # dst_path = os.path.join(train_path, im_non_defect_tot_paths[rand_idx].split('\\')[-1])
         dst_path = os.path.join(train_path, f'{i}.bmp')
@@ -48,7 +50,7 @@ def GFC_format():
     test_good_path = os.path.join(test_path, 'good')
     if not os.path.isdir(test_good_path):
         os.mkdir(test_good_path)
-    test_non_defect_tot_paths = random.sample(im_non_defect_tot_paths, len(im_defect_tot_paths) // 4)
+    test_non_defect_tot_paths = random.sample(im_non_defect_tot_paths, len(im_non_defect_tot_paths))
     for i, path in enumerate(test_non_defect_tot_paths):
         dst_path = os.path.join(test_good_path, f'{i}.bmp')
         # print(dst_path)
@@ -61,7 +63,7 @@ def GFC_format():
     # if not os.path.isdir(test_label_path):
     #     os.mkdir(test_label_path)
     
-    for i in range(len(im_defect_tot_paths) // 4):
+    for i in range(len(im_defect_tot_paths)):
         rand_idx = random.randint(0, len(im_defect_tot_paths)-1)
         # print(label_defect_tot_paths[rand_idx])
         labels = read_xml(label_defect_tot_paths[rand_idx])
