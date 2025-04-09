@@ -93,49 +93,6 @@ def train_collate(batch):
 def path_format(path:str ) -> str:
     return path.replace('\\', '/')
 
-def imread_center(img_path):
-    img = cv2.imread(img_path)
-
-    blur = cv2.GaussianBlur(img, (7, 7), 0)
-    # canny = cv2.Canny(blur, 100, 200)
-    # morph = canny
-    kernel = np.ones((5, 5), np.uint8)
-    morph = cv2.morphologyEx(blur, cv2.MORPH_GRADIENT, kernel)
-    morph = cv2.cvtColor(morph, cv2.COLOR_BGR2GRAY)
-    _, thres = cv2.threshold(morph, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    cnts = cv2.findContours(thres, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[-2]
-
-    # Filter Contour
-    good_cnts = []
-    h, w = thres.shape
-    center_point = (w // 2, h // 2)
-    for c in cnts:
-        x, y, w, h = cv2.boundingRect(c)
-        ratio = h / w
-        # area = cv2.contourArea(c)
-        area = h * w
-        img_area = thres.shape[0] * thres.shape[1]
-        if 0.5 < ratio < 2 and img_area * 0.15 < area < img_area * 0.9:
-            good_cnts.append(c)
-
-    if good_cnts:
-        good_cnts.sort(key=lambda x: abs(cv2.pointPolygonTest(x, center_point, True)))
-        # print(i, img_type)
-        # for c in good_cnts:
-        #     x, y, w, h = cv2.boundingRect(c)
-        #     cv2.rectangle(img, (x,y), (x+w, y+h), (255, 0, 0), 1)
-            # print(center_point)
-            # print(abs(cv2.pointPolygonTest(c, center_point, True)))
-        x, y, w, h = cv2.boundingRect(good_cnts[0])
-        img = img[y:y+h, x:x+w]
-        # cv2.rectangle(img, (x,y), (x+w,y+h), (0,0, 255), 1)
-        # cv2.imwrite(f'{out_path}{i}_{img_type}.bmp', out_img)
-
-    else:
-        x, y, w, h = 0, 0, img.shape[1], img.shape[0]
-
-    return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)), (x, y, w, h)
-
 
 class GFCDataset(torch.utils.data.Dataset):
     def __init__(self, root, image_size, phase, transform=None, filter=None, cropped=True):
@@ -200,7 +157,7 @@ class GFCDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         img_path, label = self.img_paths[idx], self.labels[idx]
         if self.cropped:
-            img, self.metadata[idx] = imread_center(img_path)
+            img = self.imread_center(img_path, idx)
             img = self.transform(img)
         else:
             img = Image.open(img_path).convert('RGB')
@@ -228,6 +185,51 @@ class GFCDataset(torch.utils.data.Dataset):
             return self.mean, self.std
         else:
             return None
+
+    def imread_center(self, img_path, idx):
+        img = cv2.imread(img_path)
+
+        blur = cv2.GaussianBlur(img, (5, 5), 0)
+        # canny = cv2.Canny(blur, 100, 200)
+        # morph = canny
+        kernel = np.ones((5, 5), np.uint8)
+        morph = cv2.morphologyEx(blur, cv2.MORPH_GRADIENT, kernel)
+        morph = cv2.cvtColor(morph, cv2.COLOR_BGR2GRAY)
+        _, thres = cv2.threshold(morph, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        cnts = cv2.findContours(thres, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[-2]
+
+        # Filter Contour
+        good_cnts = []
+        h, w = thres.shape
+        center_point = (w // 2, h // 2)
+        for c in cnts:
+            x, y, w, h = cv2.boundingRect(c)
+            ratio = h / w
+            # area = cv2.contourArea(c)
+            area = h * w
+            img_area = thres.shape[0] * thres.shape[1]
+            if 0.5 < ratio < 2 and img_area * 0.15 < area < img_area * 0.9:
+                good_cnts.append(c)
+
+        if good_cnts:
+            good_cnts.sort(key=lambda x: abs(cv2.pointPolygonTest(x, center_point, True)))
+            # print(i, img_type)
+            # for c in good_cnts:
+            #     x, y, w, h = cv2.boundingRect(c)
+            #     cv2.rectangle(img, (x,y), (x+w, y+h), (255, 0, 0), 1)
+            # print(center_point)
+            # print(abs(cv2.pointPolygonTest(c, center_point, True)))
+            x, y, w, h = cv2.boundingRect(good_cnts[0])
+            img = img[y:y + h, x:x + w]
+
+            # cv2.rectangle(img, (x,y), (x+w,y+h), (0,0, 255), 1)
+            # cv2.imwrite(f'{out_path}{i}_{img_type}.bmp', out_img)
+
+        else:
+            x, y, w, h = 0, 0, img.shape[1], img.shape[0]
+        self.metadata[idx] = (x, y, w, h)
+        img = cv2.equalizeHist(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
+        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB))
 
 
 
@@ -294,8 +296,7 @@ class MVTecDataset(torch.utils.data.Dataset):
         # if self.train:
         #     return img, None, None, None
         if gt == 0:
-            if not self.train:
-                gt = torch.zeros([1, img.size()[-2], img.size()[-2]])
+            gt = torch.zeros([1, img.size()[-2], img.size()[-2]])
         else:
             gt = Image.open(gt)
             gt = self.gt_transform(gt)
