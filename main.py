@@ -126,9 +126,9 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                transform=get_data_transforms(image_size, image_size, mean_std), filter=filter)
 
     if filter:
-        loss_path = f'./train_logs/gfc/{filter_name}/{backbone}_{_class_}.pkl'
+        loss_path = f'./train_logs/{dataset}/{filter_name}/{backbone}_{_class_}.pkl'
     else:
-        loss_path = f'./train_logs/gfc/{backbone}_{_class_}.pkl'
+        loss_path = f'./train_logs/{dataset}/{backbone}_{_class_}.pkl'
 
     # Clean train_log
     open(train_log_path, 'w').close()

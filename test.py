@@ -62,7 +62,7 @@ def cvt2heatmap(gray):
     return heatmap
 
 def visualize_loss(dataset, _class_):
-    train_log_path = f'./train_logs/{dataset}/' + 'wres50_' +_class_+'.pkl'
+    train_log_path = f'./train_logs/{dataset}/{backbone}_{_class_}.pkl'
     loss = pickle.load(open(train_log_path, 'rb'))
     epochs = range(1, len(loss['train'].keys()) + 1)
     plt.plot(epochs, loss['train'].values(), label='train loss')
