@@ -33,8 +33,6 @@ def cal_anomaly_map(fs_list, ft_list, out_size=224, amap_mode='mul'):
     for i in range(len(ft_list)):
         fs = fs_list[i]
         ft = ft_list[i]
-        #fs_norm = F.normalize(fs, p=2)
-        #ft_norm = F.normalize(ft, p=2)
         a_map = 1 - F.cosine_similarity(fs, ft)
         a_map = torch.unsqueeze(a_map, dim=1)
         a_map = F.interpolate(a_map, size=out_size, mode='bilinear', align_corners=True)
@@ -113,15 +111,6 @@ def evaluation(encoder, bn, decoder, dataloader, device, _class_=None, predict=N
                 gt_list_sp.append(np.max(gt.cpu().numpy().astype(int)))
             pr_list_px.extend(anomaly_map.ravel())
             pr_list_sp.append(np.max(anomaly_map))
-
-            # ano_score = (pr_list_sp - np.min(pr_list_sp)) / (np.max(pr_list_sp) - np.min(pr_list_sp))
-            # vis_data = {}
-            # vis_data['Anomaly Score'] = ano_score
-            # vis_data['Ground Truth'] = np.array(gt_list_sp)
-            # print(type(vis_data))
-            # np.save('vis.npy',vis_data)
-            # with open('{}_vis.pkl'.format(_class_), 'wb') as f:
-            #    pickle.dump(vis_data, f, pickle.HIGHEST_PROTOCOL)
 
         if not gt.isnan().any():
             aupro_sp = round(np.mean(aupro_list), 3)
