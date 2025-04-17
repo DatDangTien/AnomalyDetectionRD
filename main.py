@@ -165,6 +165,8 @@ def train(dataset, _class_, filter=None, filter_name=None):
 
     loss_dict = {'train': {}, 'val': {}}
     eva = None
+    best_val_loss = float('inf')
+    patience_counter = 0
     train_time = time.time()
     for epoch in range(epochs):
         epoch_time = time.time()
@@ -184,21 +186,31 @@ def train(dataset, _class_, filter=None, filter_name=None):
         loss_dict['train'][epoch] = np.mean(loss_list)
         loss_dict['val'][epoch] = validation(encoder, bn, decoder, val_dataloader, device)
 
-        print('epoch [{}/{}]: loss:{:.4f}, Epoch time: {:.5f}s,  Train time: {:.5f}s'.format(epoch + 1,
-                                                                                                epochs,
-                                                                                                loss_dict['train'][epoch],
-                                                                                                time.time()-epoch_time,
-                                                                                                val_time-epoch_time))
-        if (epoch + 1) % 10 == 0:
+        if loss_dict['val'][epoch] < best_val_loss:
+            best_val_loss = loss_dict['val'][epoch]
+            patience_counter = 0
             torch.save({'bn': bn.state_dict(),
                         'decoder': decoder.state_dict()}, ckp_path)
+        else:
+            patience_counter += 1
+            if patience_counter >= patience:
+                print('Early stopping!')
+                break
 
-        with open(train_log_path, 'a') as f:
-            if (epoch + 1) % 20 == 0:
-                eva = evaluation(encoder, bn, decoder, test_dataloader, device)
-                print('Pixel Auroc: {}, Sample Auroc {}, Pixel: Aupro {}'.format(*eva[:5]))
-                f.write('Evaluation: auroc_px, auroc_sp, aupro_px, ap_px, ap_sp\n')
-                f.write('epoch [{} / {}]'.format(epoch + 1, epochs) + ' '.join([str(i) for i in eva[:-2]]) + '\n')
+        print('epoch [{}/{}]: loss:{:.4f}, Train time: {:.5f}s, Epoch time: {:.5f}s'.format(epoch + 1,
+                                                                                            epochs,
+                                                                                            loss_dict['train'][epoch],
+                                                                                            val_time - epoch_time,
+                                                                                            time.time()-epoch_time))
+        if (epoch + 1) % 20 == 0:
+            eva = evaluation(encoder, bn, decoder, test_dataloader, device)
+            print('AUROC_AL: {}, AUROC_AD: {}, PRO: {}'.format(*eva[:3]))
+
+        #
+        # with open(train_log_path, 'a') as f:
+        #         f.write('Evaluation: auroc_px, auroc_sp, aupro_px, ap_px, ap_sp\n')
+        #         f.write('epoch [{} / {}]'.format(epoch + 1, epochs) + ' '.join([str(i) for i in eva[:-2]]) + '\n')
+
     with open(train_log_path, 'a') as f:
         f.write('Loading time: {}\nTraining time: {}\n'.format(round(train_time-start_time, 5), round(time.time()-train_time, 5)))
     with open(loss_path, 'wb') as f:
@@ -219,6 +231,8 @@ if __name__ == '__main__':
     backbone = 'wres50'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
+
+    patience = 10
 
     item_list = []
     if sys.argv[1] == 'mvtec':
