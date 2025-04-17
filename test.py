@@ -505,7 +505,7 @@ if __name__ == '__main__':
     print(device)
     # backbone = 'wres101'
     backbone = 'wres50'
-    image_size = 128
+    image_size = 256
     
     item_list = []
     res_path = ''

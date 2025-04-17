@@ -95,7 +95,7 @@ def path_format(path:str ) -> str:
     return path.replace('\\', '/')
 
 
-class RandomNoise(torch.nn.Module):
+class RandomNoise():
     def __init__(self, noise_type='gaussian', mean=0, std=0.05):
         super().__init__()
         self.noise_type = noise_type
@@ -103,12 +103,11 @@ class RandomNoise(torch.nn.Module):
         self.std = std
 
     def __call__(self, img):
-        if self.noise_type == 'gaussian':
-            noise = torch.randn_like(img) * self.std
-        else:
+        img = np.array(img)
+        if not self.noise_type == 'gaussian':
             self.std = random.uniform(0.01, self.std)
-            noise = torch.randn_like(img) * self.std
-        return torch.clamp(img + noise, 0, 255)
+        noise = np.random.normal(self.mean, self.std, img.shape)
+        return Image.fromarray(np.clip(img + noise, 0, 255).astype(np.uint8))
 
 
 class GFCDataset(torch.utils.data.Dataset):
@@ -216,7 +215,6 @@ class GFCDataset(torch.utils.data.Dataset):
         :return: PIL Image in RGB format.
         """
         img = cv2.imread(img_path)
-        print(img.shape)
         blur = cv2.GaussianBlur(img, (5, 5), 0)
         # canny = cv2.Canny(blur, 100, 200)
         # morph = canny
@@ -228,8 +226,7 @@ class GFCDataset(torch.utils.data.Dataset):
 
         # Filter Contour
         good_cnts = []
-        h, w = thres.shape
-        center_point = (w // 2, h // 2)
+        center_point = (thres.shape[1] // 2, thres.shape[0] // 2)
         for c in cnts:
             x, y, w, h = cv2.boundingRect(c)
             ratio = h / w
@@ -254,16 +251,19 @@ class GFCDataset(torch.utils.data.Dataset):
                 pad = random.randint(0, 20)
                 x = max(0, x - pad)
                 y = max(0, y - pad)
-                w = min(w + pad, img.shape[1])
-                h = min(h + pad, img.shape[0])
+                w = min(w + 2 * pad, img.shape[1])
+                h = min(h + 2 * pad, img.shape[0])
 
             img = img[y:y + h, x:x + w]
         else:
             x, y, w, h = 0, 0, img.shape[1], img.shape[0]
         self.metadata[idx] = (x, y, w, h)
 
-        cv2.rectangle(img, (x,y), (x+w,y+h), (0, 0, 255), 1)
-        cv2.imwrite(f'./result/train/{idx}.bmp', img)
+        # # Save image for debug
+        # if not os.path.isdir('./result/train'):
+        #     os.makedirs('./result/train')
+        # # cv2.rectangle(img, (x,y), (x+w,y+h), (0, 0, 255), 1)
+        # cv2.imwrite(f'./result/train/{idx}.bmp', img)
 
         return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
