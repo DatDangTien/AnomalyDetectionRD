@@ -22,6 +22,7 @@ import matplotlib
 import pickle
 import os
 import shutil
+import time
 
 
 def cal_anomaly_map(fs_list, ft_list, out_size=224, amap_mode='mul'):
@@ -74,7 +75,42 @@ def visualize_loss(dataset, _class_):
     plt.legend()
     plt.show()
 
-def evaluation(encoder, bn, decoder, dataloader, device, _class_=None, predict=None):
+def visualize_hist_scores(predict, label):
+    """
+    Plot histogram of anomaly scores over dataset.
+
+    :param predict: List of anomaly scores
+    :param label: List of ground truth labels
+    """
+    predict = np.array(predict)
+    label = np.array(label).ravel()
+    normal = predict[label == 0]
+    anomaly = predict[label == 1]
+    plt.figure(figsize=(10, 4))
+    bins = np.linspace(0, 1, 101)
+    # Count bin
+    normal_count, bin_edges = np.histogram(normal, bins=bins)
+    anomaly_count, _ = np.histogram(anomaly, bins=bins)
+
+    # Bin center
+    bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+
+    # Plot
+    plt.fill_between(bin_centers, normal_count, label='Normal',
+                     color='skyblue', alpha=0.7, where=(normal_count > 0))
+    plt.fill_between(bin_centers, anomaly_count, label='Anomaly',
+                     color='lightcoral', alpha=0.7, where=(normal_count > 0))
+    # plt.hist(anomaly, bins=bins, alpha=0.7, label='Abnormal', color='lightcoral', density=False)
+    plt.xlim(0, 1)
+    plt.xticks(np.linspace(0, 1, 6))
+    plt.ylim(bottom=0)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+def evaluation(encoder, bn, decoder, dataloader, device,
+               _class_=None, predict=None, hist=False,
+               timing=False):
     bn.eval()
     decoder.eval()
     gt_list_px = []
@@ -90,15 +126,25 @@ def evaluation(encoder, bn, decoder, dataloader, device, _class_=None, predict=N
     overkill = None
     underkill = None
 
+    inference_time = 0
 
     with torch.no_grad():
+        if timing:
+            torch.cuda.synchronize()
+            start = time.time()
         for img, gt, label, _ in dataloader:
-
             img = img.to(device)
             inputs = encoder(img)
             outputs = decoder(bn(inputs))
             anomaly_map, _ = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
+            anomaly_score = np.max(anomaly_map)
+
+            if timing:
+                torch.cuda.synchronize()
+                end = time.time()
+                inference_time += (end - start)
+
             if gt.isnan().any():
                 gt_list_sp.append(label.cpu().numpy().astype(int))
             else:
@@ -110,7 +156,14 @@ def evaluation(encoder, bn, decoder, dataloader, device, _class_=None, predict=N
                 gt_list_px.extend(gt.cpu().numpy().astype(int).ravel())
                 gt_list_sp.append(np.max(gt.cpu().numpy().astype(int)))
             pr_list_px.extend(anomaly_map.ravel())
-            pr_list_sp.append(np.max(anomaly_map))
+            pr_list_sp.append(anomaly_score)
+
+            if timing:
+                torch.cuda.synchronize()
+                start = time.time()
+
+        if inference_time > 0:
+            print(f'Inference time: {inference_time:.4f} sec')
 
         if not gt.isnan().any():
             aupro_sp = round(np.mean(aupro_list), 3)
@@ -131,6 +184,8 @@ def evaluation(encoder, bn, decoder, dataloader, device, _class_=None, predict=N
                 for i in range(len(pr_list)):
                     f.write('{}, {} {}\n'.format(i, pr_list[i], round(pr_list_sp[i], 3)))
 
+        if hist:
+            visualize_hist_scores(pr_list_sp, gt_list_sp)
 
     return auroc_px, auroc_sp, aupro_sp, ap_px, ap_sp, overkill, underkill
 
@@ -180,7 +235,8 @@ def test(dataset, _class_):
             ckp['bn'].pop(k)
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
-    result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device,_class_,predict_path)
+    result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device,
+                                _class_,predict_path, hist=True, timing=True)
     print(f'{_class_}: ' + ' '.join([str(me_num) for me_num in result_metrics]))
     return result_metrics
 
@@ -249,9 +305,7 @@ def visualize(dataset, _class_):
         for idx, (img, gt, label, typ) in enumerate(test_dataloader):
             decoder.eval()
             bn.eval()
-
             img = img.to(device)
-            # print(img.shape)
             inputs = encoder(img)
             # for input in inputs:
             #     print(input.shape)
@@ -268,10 +322,18 @@ def visualize(dataset, _class_):
             anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             ano_score = np.max(anomaly_map)
+            # ano_map = min_max_norm(anomaly_map)
             if dataset == 'mvtec':
                 ano_map = min_max_norm(anomaly_map)
             else:
-                ano_map = threshold_norm(anomaly_map, 0.6, 0.05)
+                ano_map = threshold_norm(anomaly_map, 0.3, 0.05)
+
+
+            # Morph ano map
+            kernel = np.ones((5, 5), np.uint8)
+            # ano_map = cv2.morphologyEx(ano_map, cv2.MORPH_OPEN, kernel)
+            ano_map = cv2.erode(ano_map, kernel, iterations=1)
+
             # Padding with uncropped image
             if dataset == 'gfc':
                 uncrop_img = np.array(test_data_ori[idx][0])

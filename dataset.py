@@ -186,7 +186,9 @@ class GFCDataset(torch.utils.data.Dataset):
         # AUGMENTATION
         if self.train:
             img = self.augment_transform(img)
-        img = self.transform(img)
+
+        if self.cropped:
+            img = self.transform(img)
 
         gt = torch.tensor(float('nan'))
 
@@ -210,6 +212,7 @@ class GFCDataset(torch.utils.data.Dataset):
     def imread_center(self, img_path, idx):
         """
         Read image and return cropped image.
+
         :param img_path: str, Path to image.
         :param idx: int, index of sample in dataset.
         :return: PIL Image in RGB format.
