@@ -210,11 +210,11 @@ if __name__ == '__main__':
     SEED = 111
     setup_seed(SEED)
 
-    epochs = 100
+    epochs = 200
     # epochs = 40
     learning_rate = 0.005
-    # batch_size = 16
-    batch_size = 8
+    batch_size = 16
+    # batch_size = 8
     image_size = 128
     backbone = 'wres50'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'

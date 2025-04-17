@@ -3,6 +3,7 @@ import numpy
 from torchvision import transforms
 from PIL import Image
 import os
+import random
 import torch
 import glob
 from torchvision.datasets import MNIST, CIFAR10, FashionMNIST, ImageFolder
@@ -94,14 +95,30 @@ def path_format(path:str ) -> str:
     return path.replace('\\', '/')
 
 
+class RandomNoise(torch.nn.Module):
+    def __init__(self, noise_type='gaussian', mean=0, std=0.05):
+        super().__init__()
+        self.noise_type = noise_type
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, img):
+        if self.noise_type == 'gaussian':
+            noise = torch.randn_like(img) * self.std
+        else:
+            self.std = random.uniform(0.01, self.std)
+            noise = torch.randn_like(img) * self.std
+        return torch.clamp(img + noise, 0, 255)
+
+
 class GFCDataset(torch.utils.data.Dataset):
     def __init__(self, root, image_size, phase, transform=None, filter=None, cropped=True):
         if phase == 'train':
             self.img_path = os.path.join(root, 'train')
-            # self.train = True
+            self.train = True
         else:
             self.img_path = os.path.join(root, 'test')
-            # self.train = False
+            self.train = False
         self.img_paths = root
         self.metadata = {}
         self.cropped = cropped
@@ -114,6 +131,12 @@ class GFCDataset(torch.utils.data.Dataset):
             self.transform, self.gt_transform = get_data_transforms(image_size, image_size, (self.mean, self.std), filter)
         else:
             self.transform, self.gt_transform = get_data_transforms(image_size, image_size, (self.mean, self.std))
+        self.augment_transform = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2),
+            RandomNoise(noise_type='random', mean=0, std=0.05),
+        ])
 
     def load_dataset(self):
 
@@ -158,16 +181,15 @@ class GFCDataset(torch.utils.data.Dataset):
         img_path, label = self.img_paths[idx], self.labels[idx]
         if self.cropped:
             img = self.imread_center(img_path, idx)
-            img = self.transform(img)
         else:
             img = Image.open(img_path).convert('RGB')
 
-        # gt = self.gt_transform(img.copy())
-        # img = self.transform(img)
-        # gt = gt.float().fill_(float('nan'))
+        # AUGMENTATION
+        if self.train:
+            img = self.augment_transform(img)
+        img = self.transform(img)
+
         gt = torch.tensor(float('nan'))
-        # if self.train:
-        #     return img, None, None, None
 
         # '.bmp'
         img_type = img_path[:-4].split('\\')[-1]
@@ -187,8 +209,14 @@ class GFCDataset(torch.utils.data.Dataset):
             return None
 
     def imread_center(self, img_path, idx):
+        """
+        Read image and return cropped image.
+        :param img_path: str, Path to image.
+        :param idx: int, index of sample in dataset.
+        :return: PIL Image in RGB format.
+        """
         img = cv2.imread(img_path)
-
+        print(img.shape)
         blur = cv2.GaussianBlur(img, (5, 5), 0)
         # canny = cv2.Canny(blur, 100, 200)
         # morph = canny
@@ -220,16 +248,24 @@ class GFCDataset(torch.utils.data.Dataset):
             # print(center_point)
             # print(abs(cv2.pointPolygonTest(c, center_point, True)))
             x, y, w, h = cv2.boundingRect(good_cnts[0])
+
+            # AUGMENTATION: Random padding
+            if self.train:
+                pad = random.randint(0, 20)
+                x = max(0, x - pad)
+                y = max(0, y - pad)
+                w = min(w + pad, img.shape[1])
+                h = min(h + pad, img.shape[0])
+
             img = img[y:y + h, x:x + w]
-
-            # cv2.rectangle(img, (x,y), (x+w,y+h), (0,0, 255), 1)
-            # cv2.imwrite(f'{out_path}{i}_{img_type}.bmp', out_img)
-
         else:
             x, y, w, h = 0, 0, img.shape[1], img.shape[0]
         self.metadata[idx] = (x, y, w, h)
-        img = cv2.equalizeHist(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
-        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB))
+
+        cv2.rectangle(img, (x,y), (x+w,y+h), (0, 0, 255), 1)
+        cv2.imwrite(f'./result/train/{idx}.bmp', img)
+
+        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
 
 

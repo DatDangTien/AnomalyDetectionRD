@@ -70,7 +70,7 @@ def visualize_loss(dataset, _class_):
     plt.title('Train Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
-    plt.xticks(np.arange(0, len(loss['train'].keys()) + 1, 1))
+    plt.xticks(np.arange(0, len(loss['train'].keys()) + 1, 10))
     plt.legend()
     plt.show()
 
@@ -529,7 +529,7 @@ if __name__ == '__main__':
             f.write('----------------------------\n')
             f.write(backbone + '\n')
             f.write(str(image_size) + '\n')
-            f.write('\tauroc_px, auroc_sp, aupro_px, ap_px, ap_sp, overkill, underkill\n')
+            f.write('\tAUROC_AL, AUROC_AD, PRO, AP_AL, AP_AD, Overkill, Underkill\n')
             for i in item_list:
                 res_class = globals()[sys.argv[1]](sys.argv[2], i)
                 res_list.append(res_class)
