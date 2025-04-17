@@ -334,30 +334,31 @@ def visualize(dataset, _class_):
             # ano_map = cv2.morphologyEx(ano_map, cv2.MORPH_OPEN, kernel)
             ano_map = cv2.erode(ano_map, kernel, iterations=1)
 
-            # Padding with uncropped image
-            if dataset == 'gfc':
-                uncrop_img = np.array(test_data_ori[idx][0])
-                img = cv2.cvtColor(uncrop_img, cv2.COLOR_RGB2BGR)
-                x, y, w, h = test_data.metadata[idx]
-                pad_ano_map = np.zeros((img.shape[0], img.shape[1]))
-                # Scale down anomaly map
-                ano_map = cv2.resize(ano_map, (w, h), interpolation=cv2.INTER_LINEAR)
-                assert pad_ano_map[y: y+h, x: x+w].shape == ano_map.shape, "Padding anomaly map shape must be same as anomaly map shape"
-                pad_ano_map[y: y+h, x: x+w] = ano_map
-                ano_map = pad_ano_map
-            else:
-                img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
-                # img = img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255
+            # # Padding with uncropped image
+            # if dataset == 'gfc':
+            #     uncrop_img = np.array(test_data_ori[idx][0])
+            #     img = cv2.cvtColor(uncrop_img, cv2.COLOR_RGB2BGR)
+            #     x, y, w, h = test_data.metadata[idx]
+            #     pad_ano_map = np.zeros((img.shape[0], img.shape[1]))
+            #     # Scale down anomaly map
+            #     ano_map = cv2.resize(ano_map, (w, h), interpolation=cv2.INTER_LINEAR)
+            #     assert pad_ano_map[y: y+h, x: x+w].shape == ano_map.shape, "Padding anomaly map shape must be same as anomaly map shape"
+            #     pad_ano_map[y: y+h, x: x+w] = ano_map
+            #     ano_map = pad_ano_map
+            # else:
+            #     img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
+            #     # img = img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255
+            img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
 
             img = np.uint8(min_max_norm(img)*255)
             ano_map = cvt2heatmap(ano_map*255)
             ano_map = show_cam_on_image(img, ano_map)
             cv2.putText(ano_map, '%.3f' % ano_score, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-            # Draw crop box
-            if dataset == 'gfc':
-                x, y, w, h = test_data.metadata[idx]
-                cv2.rectangle(ano_map, (x, y), (x+w, y+h), (0, 0, 255), 1)
+            # # Draw crop box
+            # if dataset == 'gfc':
+            #     x, y, w, h = test_data.metadata[idx]
+            #     cv2.rectangle(ano_map, (x, y), (x+w, y+h), (0, 0, 255), 1)
 
             cv2.imwrite('{}{}_{}.png'.format(result_ori, count, typ[0]), img)
             cv2.imwrite('{}{}_{}.png'.format(result_heat, count, typ[0]), ano_map)

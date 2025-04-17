@@ -178,14 +178,18 @@ class GFCDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         img_path, label = self.img_paths[idx], self.labels[idx]
-        if self.cropped:
-            img = self.imread_center(img_path, idx)
-        else:
-            img = Image.open(img_path).convert('RGB')
+
+        # CROP
+        img = Image.open(img_path).convert('RGB')
+
+        # if self.cropped:
+        #     img = self.imread_center(img_path, idx)
+        # else:
+        #     img = Image.open(img_path).convert('RGB')
 
         # AUGMENTATION
-        if self.train:
-            img = self.augment_transform(img)
+        # if self.train:
+        #     img = self.augment_transform(img)
 
         if self.cropped:
             img = self.transform(img)
