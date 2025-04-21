@@ -62,6 +62,7 @@ class FrangiFilter(torch.nn.Module):
 
 def get_data_transforms(size, isize, mean_std=None, filter=None):
     if not mean_std:
+        # ImageNet normalize
         mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     assert len(mean_std) == 2, "mean_std should has mean and std."
     assert len(mean_std[0]) == 3, "mean should has 3 values."
@@ -144,11 +145,11 @@ class GFCDataset(torch.utils.data.Dataset):
         # load dataset
         self.img_paths, self.labels = self.load_dataset()  # self.labels => good : 0, anomaly : 1
         if transform:
-            self.transform, self.gt_transform = transform
-        elif filter:
-            self.transform, self.gt_transform = get_data_transforms(image_size, image_size, (self.mean, self.std), filter)
+            self.transform, _ = transform
         else:
-            self.transform, self.gt_transform = get_data_transforms(image_size, image_size, (self.mean, self.std))
+            # self.transform, _ = get_data_transforms(image_size, image_size, (self.mean, self.std), filter)
+            self.transform, _ = get_data_transforms(image_size, image_size, filter)
+
         self.augment_transform = transforms.Compose([
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
@@ -188,9 +189,8 @@ class GFCDataset(torch.utils.data.Dataset):
         # self.mean = [self.mean] * 3
         # self.std = [self.std] * 3
 
-        # Use ImageNet instead
-        # self.mean = [0.5] * 3
-        # self.std = [0.5] * 3
+        self.mean = [0.5] * 3
+        self.std = [0.5] * 3
 
         return img_tot_paths, tot_labels
 
@@ -305,15 +305,13 @@ class MVTecDataset(torch.utils.data.Dataset):
             self.img_path = os.path.join(root, 'test')
             self.gt_path = os.path.join(root, 'ground_truth')
             # self.train = False
-        self.mean, self.std = None, None
         # load dataset
         self.img_paths, self.gt_paths, self.labels, self.types = self.load_dataset()  # self.labels => good : 0, anomaly : 1
         if transform:
             self.transform, self.gt_transform = transform
-        elif filter:
-            self.transform, self.gt_transform = get_data_transforms(image_size, image_size, filter=filter)
         else:
-            self.transform, self.gt_transform = get_data_transforms(image_size, image_size)
+            self.transform, self.gt_transform = get_data_transforms(image_size, image_size, filter=filter)
+
 
     def load_dataset(self):
 
@@ -368,11 +366,6 @@ class MVTecDataset(torch.utils.data.Dataset):
 
         return img, gt, label, img_type
 
-    def get_meta_data(self):
-        if self.mean:
-            return self.mean, self.std
-        else:
-            return None
 
 def load_data(dataset_name='mnist',normal_class=0,batch_size='16'):
 

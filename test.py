@@ -198,14 +198,14 @@ def test(dataset, _class_):
         os.makedirs(predict_path)
     predict_path += _class_ + '_predict.txt'
 
-    # Load preprocess metadata
-    try:
-        with open(f'./checkpoints/{dataset}/{_class_}_metadata.pkl', 'rb') as f:
-            mean_std = pickle.load(f)
-    except:
-        mean_std = None
-    print(mean_std)
-    transform = get_data_transforms(image_size, image_size, mean_std)
+    # # Load preprocess metadata
+    # try:
+    #     with open(f'./checkpoints/{dataset}/{_class_}_metadata.pkl', 'rb') as f:
+    #         mean_std = pickle.load(f)
+    # except:
+    #     mean_std = None
+    # print(mean_std)
+    transform = get_data_transforms(image_size, image_size)
 
     if dataset == 'mvtec':
         test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
@@ -261,14 +261,15 @@ def visualize(dataset, _class_):
     if not os.path.isdir(result_gt):
         os.mkdir(result_gt)
 
-    # Load preprocess metadata
-    try:
-        with open(f'./checkpoints/{dataset}/{_class_}_metadata.pkl', 'rb') as f:
-            mean_std = pickle.load(f)
-    except:
-        mean_std = None
-    print(mean_std)
-    transform = get_data_transforms(image_size, image_size, mean_std)
+    # # Load preprocess metadata
+    # try:
+    #     with open(f'./checkpoints/{dataset}/{_class_}_metadata.pkl', 'rb') as f:
+    #         mean_std = pickle.load(f)
+    # except:
+    #     mean_std = None
+    # print(mean_std)
+    # transform = get_data_transforms(image_size, image_size, mean_std)
+    transform = get_data_transforms(image_size, image_size)
 
     if dataset == 'mvtec':
         test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
@@ -295,7 +296,7 @@ def visualize(dataset, _class_):
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
 
-    print(encoder)
+    # print(encoder)
     # print(bn)
     # print(decoder)
 

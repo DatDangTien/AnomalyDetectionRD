@@ -79,9 +79,6 @@ def validation(encoder, bn, decoder, val_dataloader, device):
     return np.mean(loss_list)
 
 def train(dataset, _class_, filter=None, filter_name=None):
-    print(_class_)
-    start_time = time.time()
-    data_path = './dataset'
     if dataset == 'mvtec':
         if 'kaggle' in os.getcwd():
             data_path = f'/kaggle/input/mvtec-ad/{_class_}'
@@ -98,9 +95,11 @@ def train(dataset, _class_, filter=None, filter_name=None):
         train_log_path += f'{backbone}_{_class_}.txt'
 
         train_data = MVTecDataset(root=data_path, image_size=image_size, phase="train", filter=filter)
-        mean_std = train_data.get_meta_data()
-        test_data = MVTecDataset(root=data_path, image_size=image_size, phase="test",
-                                 transform=get_data_transforms(image_size, image_size, mean_std, filter=filter))
+        # mean_std = train_data.get_meta_data()
+        # test_data = MVTecDataset(root=data_path, image_size=image_size, phase="test",
+        #                          transform=get_data_transforms(image_size, image_size, filter=filter))
+
+        test_data = MVTecDataset(root=data_path, image_size=image_size, phase="test", filter=filter)
     else:
         if 'kaggle' in os.getcwd():
             data_path = f'/kaggle/input/gfc-ad'
@@ -121,9 +120,14 @@ def train(dataset, _class_, filter=None, filter_name=None):
         train_log_path += f'{backbone}_{_class_}.txt'
 
         train_data = GFCDataset(root=data_path, image_size=image_size, phase="train", filter=filter)
-        mean_std = train_data.get_meta_data()
-        test_data = GFCDataset(root=data_path, image_size=image_size, phase="test",
-                               transform=get_data_transforms(image_size, image_size, mean_std), filter=filter)
+        # mean_std = train_data.get_meta_data()
+        # test_data = GFCDataset(root=data_path, image_size=image_size, phase="test",
+        #                        transform=get_data_transforms(image_size, image_size, filter=filter))
+
+        test_data = GFCDataset(root=data_path, image_size=image_size, phase="test", filter=filter)
+    print(_class_)
+    start_time = time.time()
+    data_path = './dataset'
 
     if filter:
         loss_path = f'./train_logs/{dataset}/{filter_name}/{backbone}_{_class_}.pkl'
@@ -133,9 +137,9 @@ def train(dataset, _class_, filter=None, filter_name=None):
     # Clean train_log
     open(train_log_path, 'w').close()
 
-    # Store preprocess data
-    with open(f'./checkpoints/gfc/{_class_}_metadata.pkl', 'wb') as f:
-        pkl.dump(mean_std, f)
+    # # Store preprocess data
+    # with open(f'./checkpoints/gfc/{_class_}_metadata.pkl', 'wb') as f:
+    #     pkl.dump(mean_std, f)
 
     # Split train val
     train_len = int(len(train_data) * 0.8)
