@@ -227,7 +227,8 @@ if __name__ == '__main__':
     learning_rate = 0.005
     batch_size = 16
     # batch_size = 8
-    image_size = 256
+    # image_size = 256
+    image_size = 224
     backbone = 'wres50'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)

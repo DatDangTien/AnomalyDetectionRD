@@ -563,8 +563,9 @@ if __name__ == '__main__':
     print(device)
     # backbone = 'wres101'
     backbone = 'wres50'
-    image_size = 256
-    
+    # image_size = 256
+    image_size = 224
+
     item_list = []
     res_path = ''
     if sys.argv[2] == 'mvtec':
