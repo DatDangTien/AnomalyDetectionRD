@@ -94,6 +94,25 @@ def train_collate(batch):
 def path_format(path:str ) -> str:
     return path.replace('\\', '/')
 
+def box_padding(pad,x, y, w, h, img_w, img_h):
+    """
+    Adding margin around bouding box.
+
+    :param pad: Int padding size
+    :param x: Box x coordinate
+    :param y: Box y coordinate
+    :param w: Box width
+    :param h: Box height
+    :param img_w: image width
+    :param img_h: Image height
+    :return: pad box x, y, w, h
+    """
+    x = max(0, x - pad)
+    y = max(0, y - pad)
+    w = min(w + 2 * pad, img_w)
+    h = min(h + 2 * pad, img_h)
+
+    return x, y, w, h
 
 class RandomNoise():
     def __init__(self, noise_type='gaussian', mean=0, std=0.05):
@@ -168,8 +187,10 @@ class GFCDataset(torch.utils.data.Dataset):
         # self.std = round(np.std(img_list_px) / 255, 3)
         # self.mean = [self.mean] * 3
         # self.std = [self.std] * 3
-        self.mean = [0.5] * 3
-        self.std = [0.5] * 3
+
+        # Use ImageNet instead
+        # self.mean = [0.5] * 3
+        # self.std = [0.5] * 3
 
         return img_tot_paths, tot_labels
 
@@ -179,18 +200,17 @@ class GFCDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         img_path, label = self.img_paths[idx], self.labels[idx]
 
-        # CROP
         img = Image.open(img_path).convert('RGB')
-
+        # # CROP
         # if self.cropped:
         #     img = self.imread_center(img_path, idx)
         # else:
         #     img = Image.open(img_path).convert('RGB')
 
         # AUGMENTATION
-        # if self.train:
-        #     img = self.augment_transform(img)
-
+        if self.train:
+            img = self.augment_transform(img)
+        #
         if self.cropped:
             img = self.transform(img)
 
@@ -252,14 +272,14 @@ class GFCDataset(torch.utils.data.Dataset):
             # print(center_point)
             # print(abs(cv2.pointPolygonTest(c, center_point, True)))
             x, y, w, h = cv2.boundingRect(good_cnts[0])
+            # Fixed padding
+            pad = 4
+            x, y, w, h = box_padding(pad, x, y, w, h, img.shape[1], img.shape[0])
 
             # AUGMENTATION: Random padding
             if self.train:
                 pad = random.randint(0, 20)
-                x = max(0, x - pad)
-                y = max(0, y - pad)
-                w = min(w + 2 * pad, img.shape[1])
-                h = min(h + 2 * pad, img.shape[0])
+                x, y, w, h = box_padding(pad, x, y, w, h, img.shape[1], img.shape[0])
 
             img = img[y:y + h, x:x + w]
         else:

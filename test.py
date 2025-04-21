@@ -10,6 +10,7 @@ from torch.nn import functional as F
 from sklearn.metrics import roc_auc_score, average_precision_score, auc, roc_curve
 import cv2
 import matplotlib.pyplot as plt
+import seaborn as sns
 from skimage import measure
 import pandas as pd
 from numpy import ndarray
@@ -84,23 +85,15 @@ def visualize_hist_scores(predict, label):
     normal = predict[label == 0]
     anomaly = predict[label == 1]
     plt.figure(figsize=(10, 4))
-    bins = np.linspace(0, 1, 101)
-    # Count bin
-    normal_count, bin_edges = np.histogram(normal, bins=bins)
-    anomaly_count, _ = np.histogram(anomaly, bins=bins)
-
-    # Bin center
-    bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
-
-    # Plot
-    plt.fill_between(bin_centers, normal_count, label='Normal',
-                     color='skyblue', alpha=0.7, where=(normal_count > 0))
-    plt.fill_between(bin_centers, anomaly_count, label='Anomaly',
-                     color='lightcoral', alpha=0.7, where=(normal_count > 0))
-    # plt.hist(anomaly, bins=bins, alpha=0.7, label='Abnormal', color='lightcoral', density=False)
+    sns.histplot(normal, label='Normal', element='poly',
+                 stat='count', color='skyblue', bins=100)
+    sns.histplot(anomaly, label='Anomaly', element='poly',
+                 stat='count', color='lightcoral', bins=100)
     plt.xlim(0, 1)
     plt.xticks(np.linspace(0, 1, 6))
     plt.ylim(bottom=0)
+    plt.xlabel("")
+    plt.ylabel("")
     plt.legend()
     plt.tight_layout()
     plt.show()
@@ -135,6 +128,11 @@ def evaluation(encoder, bn, decoder, dataloader, device,
             outputs = decoder(bn(inputs))
             anomaly_map, _ = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
+            # # Morph
+            # kernel = np.ones((5, 5), np.uint8)
+            # # anomaly_map = cv2.morphologyEx(anomaly_map, cv2.MORPH_OPEN, kernel)
+            # anomaly_map = cv2.morphologyEx(anomaly_map, cv2.MORPH_ERODE, kernel)
+
             anomaly_score = np.max(anomaly_map)
 
             if timing:
@@ -297,6 +295,10 @@ def visualize(dataset, _class_):
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
 
+    print(encoder)
+    # print(bn)
+    # print(decoder)
+
     count = 0
     with torch.no_grad():
         for idx, (img, gt, label, typ) in enumerate(test_dataloader):
@@ -305,7 +307,7 @@ def visualize(dataset, _class_):
             img = img.to(device)
             inputs = encoder(img)
             # for input in inputs:
-            #     print(input.shape)
+                # print(input.shape)
             # print(len(inputs))
             outputs = bn(inputs)
             # print(outputs.shape)
@@ -315,22 +317,20 @@ def visualize(dataset, _class_):
             # print(len(outputs))
             # print('================')
 
-            # anomaly_map, amap_list = cal_anomaly_map([inputs[-1]], [outputs[-1]], img.shape[-1], amap_mode='a')
             anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
+            # Morph
+            kernel = np.ones((5, 5), np.uint8)
+            # anomaly_map = cv2.morphologyEx(anomaly_map, cv2.MORPH_OPEN, kernel)
+            anomaly_map = cv2.morphologyEx(anomaly_map, cv2.MORPH_ERODE, kernel)
             ano_score = np.max(anomaly_map)
             # ano_map = min_max_norm(anomaly_map)
             if dataset == 'mvtec':
                 ano_map = min_max_norm(anomaly_map)
             else:
-                ano_map = threshold_norm(anomaly_map, 0.3, 0.05)
+                ano_map = threshold_norm(anomaly_map, 0.2, 0.05)
 
-
-            # Morph ano map
-            kernel = np.ones((5, 5), np.uint8)
-            # ano_map = cv2.morphologyEx(ano_map, cv2.MORPH_OPEN, kernel)
-            ano_map = cv2.erode(ano_map, kernel, iterations=1)
-
+            img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
             # # Padding with uncropped image
             # if dataset == 'gfc':
             #     uncrop_img = np.array(test_data_ori[idx][0])
@@ -344,8 +344,6 @@ def visualize(dataset, _class_):
             #     ano_map = pad_ano_map
             # else:
             #     img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
-            #     # img = img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255
-            img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
 
             img = np.uint8(min_max_norm(img)*255)
             ano_map = cvt2heatmap(ano_map*255)
@@ -355,7 +353,7 @@ def visualize(dataset, _class_):
             # # Draw crop box
             # if dataset == 'gfc':
             #     x, y, w, h = test_data.metadata[idx]
-            #     cv2.rectangle(ano_map, (x, y), (x+w, y+h), (0, 0, 255), 1)
+            #     cv2.rectangle(ano_map, (x, y), (x+w, y+h), (255, 0, 0), 1)
 
             cv2.imwrite('{}{}_{}.png'.format(result_ori, count, typ[0]), img)
             cv2.imwrite('{}{}_{}.png'.format(result_heat, count, typ[0]), ano_map)

@@ -23,6 +23,7 @@ pip install scikit-image==0.18.3
 pip install pillow==8.3.2
 pip install opencv-python==3.4.14.53
 pip install matplotlib==3.4.3
+pip install seaborn
 pip install pandas==1.3.5
 ```
  
