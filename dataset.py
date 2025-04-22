@@ -147,8 +147,8 @@ class GFCDataset(torch.utils.data.Dataset):
         if transform:
             self.transform, _ = transform
         else:
-            # self.transform, _ = get_data_transforms(image_size, image_size, (self.mean, self.std), filter)
-            self.transform, _ = get_data_transforms(image_size, image_size, filter)
+            self.transform, _ = get_data_transforms(image_size, image_size, (self.mean, self.std), filter)
+            # self.transform, _ = get_data_transforms(image_size, image_size, filter)
 
         self.augment_transform = transforms.Compose([
             transforms.RandomHorizontalFlip(),

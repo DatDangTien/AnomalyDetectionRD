@@ -1,10 +1,8 @@
 import torch
-from dataset import load_data
-from torchvision.datasets import ImageFolder
 import numpy as np
 from torch.utils.data import DataLoader
-from resnet import resnet18, resnet34, resnet50, wide_resnet50_2, wide_resnet101_2
-from de_resnet import de_resnet18, de_resnet50, de_wide_resnet50_2, de_wide_resnet101_2
+from models.resnet import wide_resnet50_2, wide_resnet101_2
+from models.de_resnet import de_wide_resnet50_2, de_wide_resnet101_2
 from dataset import MVTecDataset, GFCDataset, get_data_transforms
 from torch.nn import functional as F
 from sklearn.metrics import roc_auc_score, average_precision_score, auc, roc_curve
@@ -16,10 +14,6 @@ import pandas as pd
 from numpy import ndarray
 from statistics import mean
 from scipy.ndimage import gaussian_filter
-from sklearn import manifold
-from matplotlib.ticker import NullFormatter
-from scipy.spatial.distance import pdist
-import matplotlib
 import pickle
 import os
 import shutil
@@ -205,12 +199,13 @@ def test(dataset, _class_):
     # except:
     #     mean_std = None
     # print(mean_std)
-    transform = get_data_transforms(image_size, image_size)
+    # transform = get_data_transforms(image_size, image_size, mean_std)
 
     if dataset == 'mvtec':
-        test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
+        # test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
+        test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test")
     else:
-        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
+        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test")
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
     print(backbone)
@@ -269,13 +264,15 @@ def visualize(dataset, _class_):
     #     mean_std = None
     # print(mean_std)
     # transform = get_data_transforms(image_size, image_size, mean_std)
-    transform = get_data_transforms(image_size, image_size)
 
     if dataset == 'mvtec':
-        test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
+        # test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
+        test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test")
     else:
-        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
-        test_data_ori = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform, cropped=False)
+        # test_data = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
+        # test_data_ori = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform, cropped=False)
+        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test")
+        test_data_ori = GFCDataset(root=test_path, image_size=image_size, phase="test", cropped=False)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
     print(backbone)
