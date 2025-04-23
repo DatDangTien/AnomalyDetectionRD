@@ -10,6 +10,8 @@ import os
 from torch.utils.data import DataLoader, random_split
 from models.resnet import wide_resnet50_2, wide_resnet101_2
 from models.de_resnet import de_wide_resnet50_2, de_wide_resnet101_2
+from models.convnext import convnext_tiny, convnext_small, convnext_base, convnext_large
+from models.convnext import de_convnext_tiny, de_convnext_small, de_convnext_base, de_convnext_large
 from dataset import MVTecDataset, GFCDataset, train_collate
 import torch.backends.cudnn as cudnn
 from test import evaluation
@@ -18,6 +20,16 @@ import sys
 import pickle as pkl
 import time
 
+backbone_module ={
+    'wres50': (wide_resnet50_2, de_wide_resnet50_2),
+    'wres101': (wide_resnet101_2, de_wide_resnet101_2),
+    'resnet50': (wide_resnet50_2, de_wide_resnet50_2),
+    'resnet101': (wide_resnet101_2, de_wide_resnet101_2),
+    'convnext-t': (convnext_tiny, de_convnext_tiny),
+    'convnext-s': (convnext_small, de_convnext_small),
+    'convnext-b': (convnext_base, de_convnext_base),
+    'convnext-l': (convnext_large, de_convnext_large)
+}
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -147,18 +159,16 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                                  collate_fn=train_collate, num_workers=4)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
-    if backbone == 'wres50':
-        encoder, bn = wide_resnet50_2(pretrained=True)
-        decoder = de_wide_resnet50_2(pretrained=False)
-    elif backbone == 'wres101':
-        encoder, bn = wide_resnet101_2(pretrained=True)
-        decoder = de_wide_resnet101_2(pretrained=False)
+    encoder_fn, decoder_fn = backbone_module[backbone]
+    encoder, bn = encoder_fn(pretrained=True)
+    decoder = decoder_fn(pretrained=False)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
     decoder = decoder.to(device)
 
-    optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters()), lr=learning_rate, betas=(0.5,0.999))
+    optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters()),
+                                 lr=learning_rate, betas=optimizer_momentum)
 
     print(count_parameters(decoder) + count_parameters(bn), 'params')
     print(measure_parameters(decoder) + measure_parameters(bn), 'Mb')
@@ -219,17 +229,21 @@ def train(dataset, _class_, filter=None, filter_name=None):
 
 
 if __name__ == '__main__':
+    backbones = ['resnet50', 'resnet101', 'wres50', 'wres101',
+                 'convnext-t', 'convnext-s', 'convnext-b', 'convnext-l']
+
     SEED = 111
     setup_seed(SEED)
 
+    image_size = 224
     epochs = 200
     # epochs = 40
-    learning_rate = 0.005
+    learning_rate = 5e-3
+    optimizer_momentum = (0.9, 0.999)
     batch_size = 16
     # batch_size = 8
     # image_size = 256
-    image_size = 224
-    backbone = 'wres50'
+    backbone = 'convnext-t'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 
