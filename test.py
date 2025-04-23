@@ -6,6 +6,7 @@ from models.de_resnet import de_wide_resnet50_2, de_wide_resnet101_2
 from models.convnext import convnext_tiny, convnext_small, convnext_base, convnext_large
 from models.convnext import de_convnext_tiny, de_convnext_small, de_convnext_base, de_convnext_large
 from dataset import MVTecDataset, GFCDataset, get_data_transforms
+from models.stage_attn import cal_anomaly_map, AdaptiveStages
 from torch.nn import functional as F
 from sklearn.metrics import roc_auc_score, average_precision_score, auc, roc_curve
 import cv2
@@ -20,27 +21,6 @@ import pickle
 import os
 import shutil
 import time
-
-
-def cal_anomaly_map(fs_list, ft_list, out_size=224, amap_mode='mul'):
-    if amap_mode == 'mul':
-        anomaly_map = np.ones([out_size, out_size])
-    else:
-        anomaly_map = np.zeros([out_size, out_size])
-    a_map_list = []
-    for i in range(len(ft_list)):
-        fs = fs_list[i]
-        ft = ft_list[i]
-        a_map = 1 - F.cosine_similarity(fs, ft)
-        a_map = torch.unsqueeze(a_map, dim=1)
-        a_map = F.interpolate(a_map, size=out_size, mode='bilinear', align_corners=True)
-        a_map = a_map[0, 0, :, :].to('cpu').detach().numpy()
-        a_map_list.append(a_map)
-        if amap_mode == 'mul':
-            anomaly_map *= a_map
-        else:
-            anomaly_map += a_map
-    return anomaly_map, a_map_list
 
 def show_cam_on_image(img, anomaly_map):
     cam = np.float32(anomaly_map)/255 + np.float32(img)/255
@@ -122,7 +102,7 @@ def evaluation(encoder, bn, decoder, dataloader, device,
             img = img.to(device)
             inputs = encoder(img)
             outputs = decoder(bn(inputs))
-            anomaly_map, _ = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
+            anomaly_map, _ = cal_anomaly_map(inputs, outputs, out_size=img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             # # Morph
             # kernel = np.ones((5, 5), np.uint8)
@@ -311,7 +291,7 @@ def visualize(dataset, _class_):
             # print(len(outputs))
             # print('================')
 
-            anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
+            anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, out_size=img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             # Morph
             kernel = np.ones((5, 5), np.uint8)
@@ -448,7 +428,7 @@ def compute_pro(masks: ndarray, amaps: ndarray, num_th: int = 200) -> None:
 #             outputs = decoder(bn(inputs))
 #
 #
-#             anomaly_map, amap_list = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
+#             anomaly_map, amap_list = cal_anomaly_map(inputs, outputs, out_size=img.shape[-1], amap_mode='a')
 #             #anomaly_map = gaussian_filter(anomaly_map, sigma=4)
 #             ano_map = min_max_norm(anomaly_map)
 #             ano_map = cvt2heatmap(ano_map*255)
@@ -532,7 +512,7 @@ def compute_pro(masks: ndarray, amaps: ndarray, num_th: int = 200) -> None:
 #             label = label.to(device)
 #             inputs = encoder(img)
 #             outputs = decoder(bn(inputs))
-#             anomaly_map, _ = cal_anomaly_map(inputs, outputs, img.shape[-1], 'acc')
+#             anomaly_map, _ = cal_anomaly_map(inputs, outputs, out_size=img.shape[-1], 'acc')
 #             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
 #
 #
@@ -568,8 +548,7 @@ import sys
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
-    backbone = 'convnext-b'
-    # image_size = 256
+    backbone = 'convnext-l'
     image_size = 224
 
     item_list = []

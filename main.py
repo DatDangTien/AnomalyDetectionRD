@@ -12,6 +12,7 @@ from models.resnet import wide_resnet50_2, wide_resnet101_2
 from models.de_resnet import de_wide_resnet50_2, de_wide_resnet101_2
 from models.convnext import convnext_tiny, convnext_small, convnext_base, convnext_large
 from models.convnext import de_convnext_tiny, de_convnext_small, de_convnext_base, de_convnext_large
+from models.stage_attn import AdaptiveStages, adap_loss_function
 from dataset import MVTecDataset, GFCDataset, train_collate
 import torch.backends.cudnn as cudnn
 from test import evaluation
@@ -242,7 +243,7 @@ if __name__ == '__main__':
     batch_size = 16
     # batch_size = 8
     # image_size = 256
-    backbone = 'convnext-b'
+    backbone = 'convnext-l'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 
