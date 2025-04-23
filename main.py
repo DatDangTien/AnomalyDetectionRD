@@ -242,7 +242,7 @@ if __name__ == '__main__':
     batch_size = 16
     # batch_size = 8
     # image_size = 256
-    backbone = 'convnext-t'
+    backbone = 'convnext-b'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 
