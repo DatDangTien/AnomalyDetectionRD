@@ -37,7 +37,7 @@ class LayerNorm(nn.Module):
 class DropPath(nn.Module):
     def __init__(self,
                  drop_rate: float = .0):
-        super()().__init__()
+        super().__init__()
         self.drop_rate = drop_rate
 
 
