@@ -30,7 +30,7 @@ class LayerNorm(nn.Module):
         u = x.mean(dim=1, keepdim=True)
         v = ((x - u) ** 2).mean(dim=1, keepdim=True)
         x = (x - u) / (v + self.eps) ** 0.5
-        x = x * self.weight[:, None, None] + self.weight[:, None, None]
+        x = x * self.weight[:, None, None] + self.bias[:, None, None]
         return x
 
 
