@@ -20,17 +20,6 @@ import sys
 import pickle as pkl
 import time
 
-backbone_module ={
-    'wres50': (wide_resnet50_2, de_wide_resnet50_2),
-    'wres101': (wide_resnet101_2, de_wide_resnet101_2),
-    'resnet50': (wide_resnet50_2, de_wide_resnet50_2),
-    'resnet101': (wide_resnet101_2, de_wide_resnet101_2),
-    'convnext-t': (convnext_tiny, de_convnext_tiny),
-    'convnext-s': (convnext_small, de_convnext_small),
-    'convnext-b': (convnext_base, de_convnext_base),
-    'convnext-l': (convnext_large, de_convnext_large)
-}
-
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -227,6 +216,16 @@ def train(dataset, _class_, filter=None, filter_name=None):
         pkl.dump(loss_dict, f)
     return eva
 
+backbone_module ={
+    'wres50': (wide_resnet50_2, de_wide_resnet50_2),
+    'wres101': (wide_resnet101_2, de_wide_resnet101_2),
+    'resnet50': (wide_resnet50_2, de_wide_resnet50_2),
+    'resnet101': (wide_resnet101_2, de_wide_resnet101_2),
+    'convnext-t': (convnext_tiny, de_convnext_tiny),
+    'convnext-s': (convnext_small, de_convnext_small),
+    'convnext-b': (convnext_base, de_convnext_base),
+    'convnext-l': (convnext_large, de_convnext_large)
+}
 
 if __name__ == '__main__':
     backbones = ['resnet50', 'resnet101', 'wres50', 'wres101',

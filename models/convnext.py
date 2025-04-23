@@ -87,11 +87,13 @@ class ConvNeXt(nn.Module):
                  num_classes=1000,
                  depths=[3, 3, 9, 3],
                  dims=[96, 192, 384, 768],
+                 num_states=4,
                  drop_path_rate=0.,
                  layer_scale_init_value=1e-6,
                  head_init_scale=1.0,
                  norm_eps=1e-6):
         super().__init__()
+        self.num_states = num_states
         self.downsample_layers = nn.ModuleList()  # stem and 3 intermediate downsampling conv layers
         stem = nn.Sequential(
             nn.Conv2d(in_chans, dims[0], kernel_size=4, stride=4),
@@ -134,10 +136,15 @@ class ConvNeXt(nn.Module):
     def forward(self, x: Tensor) -> List[Tensor]:
         """Dim: 3,224,224 -> [96,56,56 -> 192,28,28 -> 384,14,14 -> 768,7,7]"""
         feature = []
-        for i in range(4):
+        # print('Encoder__________________')
+        for i in range(self.num_states):
+            # print(x.shape)
             x = self.downsample_layers[i](x)
+            # print(x.shape)
             x = self.stages[i](x)
+            # print(x.shape)
             feature.append(x)
+        # print(len(feature))
         return feature
 
 def _convnext(arch: str,
@@ -156,55 +163,64 @@ class BN_layer(nn.Module):
                  block,
                  dims=[96, 192, 384, 768],
                  bn_depth=3,
+                 num_states=4,
                  drop_path_rate=.0,
                  layer_scale_init_value=1e-6,
                  norm_eps=1e-6):
         super().__init__()
+        self.num_states = num_states
         self.mff = nn.ModuleList()
-        for i in range(len(dims)):
+        for i in range(num_states):
             conv = []
-            for j in range(i, len(dims) - 1):
+            for j in range(i, num_states - 1):
                 conv.append(nn.Conv2d(dims[j], dims[j+1],
                                       kernel_size=3, stride=2, padding=1))
                 conv.append(LayerNorm(dims[j+1], eps=norm_eps))
                 conv.append(nn.GELU())
             self.mff.append(nn.Sequential(*conv))
         self.downsample = nn.Sequential(
-            nn.Conv2d(dims[-1] * len(dims), dims[-1] * 2, kernel_size=2, stride=2),
-            LayerNorm(dims[-1] * 2, eps=norm_eps),
+            nn.Conv2d(dims[num_states-1] * num_states, dims[num_states-1] * 2, kernel_size=2, stride=2),
+            LayerNorm(dims[num_states-1] * 2, eps=norm_eps),
         )
         # Stochasic depth
         dp_rates = [x.item() for x in torch.linspace(0, drop_path_rate, bn_depth)]
         self.oce = nn.Sequential(
-            *[block(dims[-1] * 2, drop_path=dp_rates[i],
+            *[block(dims[num_states-1] * 2, drop_path=dp_rates[i],
                     layer_scale_init_value=layer_scale_init_value,
                     norm_eps=norm_eps) for i in range(bn_depth)],
         )
 
     # Multiscale feature fusion
     def forward(self, x: List[Tensor]) -> Tensor:
+        # print('BN_________________')
         x = [self.mff[i](x[i]) for i in range(len(x))]
         x = torch.cat(x, dim=1)
+        # print(x.shape)
         x = self.downsample(x)
+        # print(x.shape)
         x = self.oce(x)
+        # print(x.shape)
         return x
 
 class De_ConvNeXt(nn.Module):
     def __init__(self,
                  depths=[3, 3, 9, 3],
                  dims=[96, 192, 384, 768],
+                 num_states=4,
                  drop_path_rate=0.,
                  layer_scale_init_value=1e-6,
                  norm_eps=1e-6):
         super().__init__()
+        self.num_states = num_states
         # Reverse dims
+        dims = dims[:num_states]
         dims = dims[::-1]   # Reverse dims -> [768, 384, 192, 96]
         self.upsample_layers = nn.ModuleList()  # stem and 3 intermediate downsampling conv layers
         self.upsample_layers.append(nn.Sequential(
-            nn.ConvTranspose2d(dims[0]*2, dims[0], kernel_size=2, stride=2, output_padding=1),
+            nn.ConvTranspose2d(dims[0]*2, dims[0], kernel_size=2, stride=2),
             LayerNorm(dims[0], eps=norm_eps)
         ))
-        for i in range(3):
+        for i in range(num_states-1):
             self.upsample_layers.append(nn.Sequential(
                 nn.ConvTranspose2d(dims[i], dims[i + 1], kernel_size=2, stride=2),
                 LayerNorm(dims[i + 1], eps=norm_eps),
@@ -214,7 +230,7 @@ class De_ConvNeXt(nn.Module):
         # Stochastic depth
         dp_rates = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
         cur = 0
-        for i in range(4):
+        for i in range(num_states):
             stage = nn.Sequential(
                 *[Block(dim=dims[i], drop_path=dp_rates[cur + j],
                         layer_scale_init_value=layer_scale_init_value,
@@ -234,10 +250,15 @@ class De_ConvNeXt(nn.Module):
     def forward(self, x: Tensor) -> List[Tensor]:
         """Dim: 3,224,224 -> [96,56,56 -> 192,28,28 -> 384,14,14 -> 768,7,7]"""
         feature = []
-        for i in range(4):
+        # print('Decoder__________________')
+        for i in range(self.num_states):
+            # print(x.shape)
             x = self.upsample_layers[i](x)
+            # print(x.shape)
             x = self.stages[i](x)
+            # print(x.shape)
             feature.append(x)
+        # print(len(feature))
         return feature[::-1]    # Reverse -> [96, 192, 384, 768]
 
 
@@ -249,6 +270,7 @@ def convnext_tiny(pretrained: bool = False,
     depths = [3, 3, 9, 3]
     kwargs['dims'] = [96, 192, 384, 768]
     kwargs['drop_path_rate'] = 0.1
+    kwargs['num_states'] = 3
     return _convnext('convnext_t', pretrained, progress, **kwargs), BN_layer(Block, **kwargs)
 
 
@@ -260,6 +282,7 @@ def convnext_small(pretrained: bool = False,
     depths = [3, 3, 27, 3]
     kwargs['dims'] = [96, 192, 384, 768]
     kwargs['drop_path_rate'] = 0.4
+    kwargs['num_states'] = 3
     return _convnext('convnext_s', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
 
 
@@ -271,6 +294,7 @@ def convnext_base(pretrained: bool = False,
     depths = [3, 3, 27, 3]
     kwargs['dims'] = [128, 256, 512, 1024]
     kwargs['drop_path_rate'] = 0.5
+    kwargs['num_states'] = 3
     return _convnext('convnext_b', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
 
 
@@ -282,6 +306,7 @@ def convnext_large(pretrained: bool = False,
     depths = [3, 3, 27, 3]
     kwargs['dims'] = [192, 384, 768, 1536]
     kwargs['drop_path_rate'] = 0.5
+    kwargs['num_states'] = 3
     return _convnext('convnext_l', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
 
 
@@ -293,6 +318,7 @@ def de_convnext_tiny(progress: bool = True,
     depths = [3, 3, 9, 3]
     kwargs['dims'] = [96, 192, 384, 768]
     kwargs['drop_path_rate'] = 0.1
+    kwargs['num_states'] = 3
     return De_ConvNeXt(depths=depths, **kwargs)
 
 
@@ -304,6 +330,7 @@ def de_convnext_small(progress: bool = True,
     depths = [3, 3, 27, 3]
     kwargs['dims'] = [96, 192, 384, 768]
     kwargs['drop_path_rate'] = 0.4
+    kwargs['num_states'] = 3
     return De_ConvNeXt(depths=depths, **kwargs)
 
 
@@ -315,6 +342,7 @@ def de_convnext_base(progress: bool = True,
         depths = [3, 3, 27, 3]
         kwargs['dims'] = [128, 256, 512, 1024]
         kwargs['drop_path_rate'] = 0.5
+        kwargs['num_states'] = 3
         return De_ConvNeXt(depths=depths, **kwargs)
 
 
@@ -326,5 +354,6 @@ def de_convnext_large(progress: bool = True,
         depths = [3, 3, 27, 3]
         kwargs['dims'] = [192, 384, 768, 1536]
         kwargs['drop_path_rate'] = 0.5
+        kwargs['num_states'] = 3
         return De_ConvNeXt(depths=depths, **kwargs)
 

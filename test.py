@@ -3,6 +3,8 @@ import numpy as np
 from torch.utils.data import DataLoader
 from models.resnet import wide_resnet50_2, wide_resnet101_2
 from models.de_resnet import de_wide_resnet50_2, de_wide_resnet101_2
+from models.convnext import convnext_tiny, convnext_small, convnext_base, convnext_large
+from models.convnext import de_convnext_tiny, de_convnext_small, de_convnext_base, de_convnext_large
 from dataset import MVTecDataset, GFCDataset, get_data_transforms
 from torch.nn import functional as F
 from sklearn.metrics import roc_auc_score, average_precision_score, auc, roc_curve
@@ -209,12 +211,9 @@ def test(dataset, _class_):
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
     print(backbone)
-    if backbone == 'wres50':
-        encoder, bn = wide_resnet50_2(pretrained=True)
-        decoder = de_wide_resnet50_2(pretrained=False)
-    elif backbone == 'wres101':
-        encoder, bn = wide_resnet101_2(pretrained=True)
-        decoder = de_wide_resnet101_2(pretrained=False)
+    encoder_fn, decoder_fn = backbone_module[backbone]
+    encoder, bn = encoder_fn(pretrained=True)
+    decoder = decoder_fn(pretrained=False)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -276,12 +275,9 @@ def visualize(dataset, _class_):
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
     print(backbone)
-    if backbone == 'wres50':
-        encoder, bn = wide_resnet50_2(pretrained=True)
-        decoder = de_wide_resnet50_2(pretrained=False)
-    elif backbone == 'wres101':
-        encoder, bn = wide_resnet101_2(pretrained=True)
-        decoder = de_wide_resnet101_2(pretrained=False)
+    encoder_fn, decoder_fn = backbone_module[backbone]
+    encoder, bn = encoder_fn(pretrained=True)
+    decoder = decoder_fn(pretrained=False)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -555,12 +551,24 @@ def compute_pro(masks: ndarray, amaps: ndarray, num_th: int = 200) -> None:
 #         auroc_sp_mean = round(roc_auc_score(gt_list_sp, prmean_list_sp), 4)
 #     return auroc_sp_max, auroc_sp_mean
 
+backbone_module ={
+    'wres50': (wide_resnet50_2, de_wide_resnet50_2),
+    'wres101': (wide_resnet101_2, de_wide_resnet101_2),
+    'resnet50': (wide_resnet50_2, de_wide_resnet50_2),
+    'resnet101': (wide_resnet101_2, de_wide_resnet101_2),
+    'convnext-t': (convnext_tiny, de_convnext_tiny),
+    'convnext-s': (convnext_small, de_convnext_small),
+    'convnext-b': (convnext_base, de_convnext_base),
+    'convnext-l': (convnext_large, de_convnext_large)
+}
+backbones = ['resnet50', 'resnet101', 'wres50', 'wres101',
+             'convnext-t', 'convnext-s', 'convnext-b', 'convnext-l']
+
 import sys
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
-    # backbone = 'wres101'
-    backbone = 'wres50'
+    backbone = 'convnext-t'
     # image_size = 256
     image_size = 224
 
