@@ -116,6 +116,7 @@ def evaluation(encoder, bn, decoder, dataloader, device,
                 end = time.time()
                 inference_time += (end - start)
 
+            print(gt.shape)
             if gt.isnan().any():
                 gt_list_sp.append(label.cpu().numpy().astype(int))
             else:
