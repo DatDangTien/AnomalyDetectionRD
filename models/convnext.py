@@ -42,8 +42,10 @@ class DropPath(nn.Module):
 
 
     def forward(self, x: Tensor) -> Tensor:
+        if self.drop_rate == 0. or not self.training:
+            return x
         mask_shape = (x.shape[0],) + (1,) * (x.ndim - 1)
-        mask = (torch.rand(mask_shape) < self.drop_rate).float()
+        mask = (torch.rand(mask_shape, device=x.device) < self.drop_rate).float()
         return x / (1 - self.drop_rate) * mask
 
 
