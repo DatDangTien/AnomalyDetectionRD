@@ -238,11 +238,11 @@ if __name__ == '__main__':
     epochs = 200
     # epochs = 40
     learning_rate = 5e-3
-    optimizer_momentum = (0.9, 0.999)
+    optimizer_momentum = (0.5, 0.999)
     batch_size = 16
     # batch_size = 8
     # image_size = 256
-    backbone = 'convnext-t'
+    backbone = 'convnext-b'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 
