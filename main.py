@@ -240,9 +240,8 @@ if __name__ == '__main__':
     # epochs = 40
     learning_rate = 5e-3
     optimizer_momentum = (0.5, 0.999)
-    batch_size = 16
-    # batch_size = 8
-    # image_size = 256
+    # batch_size = 16
+    batch_size = 8
     backbone = 'convnext-l'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
