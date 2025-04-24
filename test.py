@@ -116,6 +116,7 @@ def evaluation(encoder, bn, decoder, dataloader, device,
                 end = time.time()
                 inference_time += (end - start)
 
+            print(gt)
             if gt is None:
                 print('None')
             if gt.isnan().any():
