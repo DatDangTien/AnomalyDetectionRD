@@ -207,7 +207,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                                                                             loss_dict['train'][epoch],
                                                                                             val_time - epoch_time,
                                                                                             time.time()-epoch_time))
-        if (epoch + 1) % 1 == 0:
+        if (epoch + 1) % 20 == 0:
             eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
             print('AUROC_AL: {}, AUROC_AD: {}, PRO: {}'.format(*eva[:3]))
 
