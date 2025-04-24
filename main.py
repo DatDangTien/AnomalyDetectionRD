@@ -63,16 +63,18 @@ def loss_concat(a, b):
     loss += torch.mean(1-cos_loss(a_map,b_map))
     return loss
 
-def validation(encoder, bn, decoder, val_dataloader, device):
+def validation(encoder, bn, decoder, layer_attn, val_dataloader, device):
     bn.eval()
     decoder.eval()
+    layer_attn.eval()
     with torch.no_grad():
         loss_list = []
         for img, _ in val_dataloader:
             img = img.to(device)
             inputs = encoder(img)
             outputs = decoder(bn(inputs))
-            loss = loss_function(inputs, outputs)
+            # loss = loss_function(inputs, outputs)
+            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=0.01)
             loss_list.append(loss.item())
     return np.mean(loss_list)
 
@@ -152,12 +154,13 @@ def train(dataset, _class_, filter=None, filter_name=None):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
+    layer_attn = AdaptiveStages(num_stages=3)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
     decoder = decoder.to(device)
 
-    optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters()),
+    optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters())+list(layer_attn.parameters()),
                                  lr=learning_rate, betas=optimizer_momentum)
 
     print(count_parameters(decoder) + count_parameters(bn), 'params')
@@ -172,19 +175,21 @@ def train(dataset, _class_, filter=None, filter_name=None):
         epoch_time = time.time()
         bn.train()
         decoder.train()
+        layer_attn.train()
         loss_list = []
         for img, _ in train_dataloader:
             img = img.to(device)
             inputs = encoder(img)
             outputs = decoder(bn(inputs))#bn(inputs))
-            loss = loss_function(inputs, outputs)
+            # loss = loss_function(inputs, outputs)
+            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=0.01)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             loss_list.append(loss.item())
         val_time = time.time()
         loss_dict['train'][epoch] = np.mean(loss_list)
-        loss_dict['val'][epoch] = validation(encoder, bn, decoder, val_dataloader, device)
+        loss_dict['val'][epoch] = validation(encoder, bn, decoder, layer_attn, val_dataloader, device)
 
         if loss_dict['val'][epoch] < best_val_loss:
             best_val_loss = loss_dict['val'][epoch]
@@ -203,7 +208,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                                                                             val_time - epoch_time,
                                                                                             time.time()-epoch_time))
         if (epoch + 1) % 1 == 0:
-            eva = evaluation(encoder, bn, decoder, test_dataloader, device)
+            eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
             print('AUROC_AL: {}, AUROC_AD: {}, PRO: {}'.format(*eva[:3]))
 
         #
@@ -240,9 +245,9 @@ if __name__ == '__main__':
     # epochs = 40
     learning_rate = 5e-3
     optimizer_momentum = (0.5, 0.999)
-    # batch_size = 16
-    batch_size = 8
-    backbone = 'convnext-l'
+    batch_size = 16
+    # batch_size = 8
+    backbone = 'wres50'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 

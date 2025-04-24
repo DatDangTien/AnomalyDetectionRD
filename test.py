@@ -74,11 +74,12 @@ def visualize_hist_scores(predict, label):
     plt.tight_layout()
     plt.show()
 
-def evaluation(encoder, bn, decoder, dataloader, device,
+def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
                _class_=None, predict=None, hist=False,
                timing=False):
     bn.eval()
     decoder.eval()
+    layer_attn.eval()
     gt_list_px = []
     pr_list_px = []
     gt_list_sp = []
@@ -102,7 +103,8 @@ def evaluation(encoder, bn, decoder, dataloader, device,
             img = img.to(device)
             inputs = encoder(img)
             outputs = decoder(bn(inputs))
-            anomaly_map, _ = cal_anomaly_map(inputs, outputs, out_size=img.shape[-1], amap_mode='a')
+            anomaly_map, _ = cal_anomaly_map(inputs, outputs, layer_attn,
+                                             out_size=img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             # # Morph
             # kernel = np.ones((5, 5), np.uint8)
@@ -116,9 +118,11 @@ def evaluation(encoder, bn, decoder, dataloader, device,
                 end = time.time()
                 inference_time += (end - start)
 
-            print(gt)
-            if gt is None:
-                print('None')
+            # print(gt)
+            # if gt is None:
+            #     print('None')
+            # BUG on Colab:
+            # UnboundLocalError: cannot access local variable 'gt' where it is not associated with a value
             if gt.isnan().any():
                 gt_list_sp.append(label.cpu().numpy().astype(int))
             else:
@@ -551,7 +555,7 @@ import sys
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
-    backbone = 'convnext-l'
+    backbone = 'wres50'
     image_size = 224
 
     item_list = []
