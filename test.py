@@ -213,6 +213,7 @@ def test(dataset, _class_):
             ckp['bn'].pop(k)
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
+    layer_attn.load_state_dict(ckp['layer_attn'])
     result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn(),
                                 _class_,predict_path, hist=True, timing=True)
     print(f'{_class_}: ' + ' '.join([str(me_num) for me_num in result_metrics]))
@@ -279,6 +280,7 @@ def visualize(dataset, _class_):
             ckp['bn'].pop(k)
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
+    layer_attn.load_state_dict(ckp['layer_attn'])
 
     # print(encoder)
     # print(bn)
@@ -289,6 +291,7 @@ def visualize(dataset, _class_):
         for idx, (img, gt, label, typ) in enumerate(test_dataloader):
             decoder.eval()
             bn.eval()
+            layer_attn.eval()
             img = img.to(device)
             inputs = encoder(img)
             # for input in inputs:
