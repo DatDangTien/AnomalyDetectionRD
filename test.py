@@ -22,6 +22,16 @@ import os
 import shutil
 import time
 
+def format_state_dict(state_dicts):
+    for module, state_dict in state_dicts.items():
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            k = k.replace("module.", "", 1)
+            new_state_dict[k] = v
+        state_dicts[module] = new_state_dict
+        del state_dict
+    return state_dicts
+
 def show_cam_on_image(img, anomaly_map):
     cam = np.float32(anomaly_map)/255 + np.float32(img)/255
     cam = cam / np.max(cam)
@@ -208,6 +218,8 @@ def test(dataset, _class_):
     decoder = decoder.to(device)
     layer_attn = layer_attn.to(device)
     ckp = torch.load(ckp_path, map_location=device)
+    ckp = format_state_dict(ckp)    # Stripe module. prefix by DataParallel
+    print(ckp.keys())
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:
             ckp['bn'].pop(k)
@@ -275,6 +287,7 @@ def visualize(dataset, _class_):
     decoder = decoder.to(device)
     layer_attn = layer_attn.to(device)
     ckp = torch.load(ckp_path, map_location=device)
+    ckp = format_state_dict(ckp)    # Stripe module. prefix by DataParallel
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:
             ckp['bn'].pop(k)
