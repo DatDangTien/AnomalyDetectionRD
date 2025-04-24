@@ -203,7 +203,8 @@ def train(dataset, _class_, filter=None, filter_name=None):
             best_val_loss = loss_dict['val'][epoch]
             patience_counter = 0
             torch.save({'bn': bn.state_dict(),
-                        'decoder': decoder.state_dict()}, ckp_path)
+                        'decoder': decoder.state_dict(),
+                        'layer_attn': layer_attn.state_dict()}, ckp_path)
         else:
             patience_counter += 1
             if patience_counter >= patience:

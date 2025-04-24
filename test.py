@@ -201,17 +201,19 @@ def test(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
+    layer_attn = AdaptiveStages(num_stages=3)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
     decoder = decoder.to(device)
+    layer_attn = layer_attn.to(device)
     ckp = torch.load(ckp_path, map_location=device)
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:
             ckp['bn'].pop(k)
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
-    result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device,
+    result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn(),
                                 _class_,predict_path, hist=True, timing=True)
     print(f'{_class_}: ' + ' '.join([str(me_num) for me_num in result_metrics]))
     return result_metrics
@@ -265,10 +267,12 @@ def visualize(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
+    layer_attn = AdaptiveStages(num_stages=3)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
     decoder = decoder.to(device)
+    layer_attn = layer_attn.to(device)
     ckp = torch.load(ckp_path, map_location=device)
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:
@@ -298,7 +302,8 @@ def visualize(dataset, _class_):
             # print(len(outputs))
             # print('================')
 
-            anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, out_size=img.shape[-1], amap_mode='a')
+            anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, layer_attn(),
+                                                    out_size=img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             # Morph
             kernel = np.ones((5, 5), np.uint8)
