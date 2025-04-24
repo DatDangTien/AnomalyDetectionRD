@@ -4,7 +4,7 @@
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
 import torch
-from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.nn import DataParallel as DP
 import numpy as np
 import random
 import os
@@ -163,10 +163,10 @@ def train(dataset, _class_, filter=None, filter_name=None):
     layer_attn.to(device)
 
     if torch.cuda.device_count() > 1:
-        encoder = DDP(encoder)
-        bn = DDP(bn)
-        decoder = DDP(decoder)
-        layer_attn = DDP(layer_attn)
+        encoder = DP(encoder)
+        bn = DP(bn)
+        decoder = DP(decoder)
+        layer_attn = DP(layer_attn)
 
     optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters())+list(layer_attn.parameters()),
                                  lr=learning_rate, betas=optimizer_momentum)
