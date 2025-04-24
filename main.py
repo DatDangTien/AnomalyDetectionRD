@@ -159,6 +159,13 @@ def train(dataset, _class_, filter=None, filter_name=None):
     encoder.eval()
     bn = bn.to(device)
     decoder = decoder.to(device)
+    layer_attn.to(device)
+
+    if torch.cuda.device_count() > 1:
+        encoder = torch.nn.DataParallel(encoder)
+        bn = torch.nn.DataParallel(bn)
+        decoder = torch.nn.DataParallel(decoder)
+        layer_attn = torch.nn.DataParallel(layer_attn)
 
     optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters())+list(layer_attn.parameters()),
                                  lr=learning_rate, betas=optimizer_momentum)
