@@ -220,7 +220,6 @@ def test(dataset, _class_):
     ckp = torch.load(ckp_path, map_location=device)
     ckp = format_state_dict(ckp)    # Stripe module. prefix by DataParallel
     # print(ckp.keys())
-    print(layer_attn.get_weight())
 
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:

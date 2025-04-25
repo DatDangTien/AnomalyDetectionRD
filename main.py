@@ -190,13 +190,10 @@ def train(dataset, _class_, filter=None, filter_name=None):
             inputs = encoder(img)
             outputs = decoder(bn(inputs))#bn(inputs))
             # loss = loss_function(inputs, outputs)
-            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=0.01, device=device)
+            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=layer_entropy, device=device)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            # grad
-            for name, param in layer_attn.named_parameters():
-                print(param.grad)
             loss_list.append(loss.item())
         val_time = time.time()
         loss_dict['train'][epoch] = np.mean(loss_list)
@@ -214,11 +211,15 @@ def train(dataset, _class_, filter=None, filter_name=None):
                 print('Early stopping!')
                 break
 
+
         print('epoch [{}/{}]: loss:{:.4f}, Train time: {:.5f}s, Epoch time: {:.5f}s'.format(epoch + 1,
                                                                                             epochs,
                                                                                             loss_dict['train'][epoch],
                                                                                             val_time - epoch_time,
                                                                                             time.time()-epoch_time))
+
+        print(layer_attn.get_weight())
+
         if (epoch + 1) % 20 == 0:
             eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
             print('AUROC_AL: {}, AUROC_AD: {}, PRO: {}'.format(*eva[:3]))
@@ -255,6 +256,7 @@ if __name__ == '__main__':
     image_size = 224
     epochs = 200
     # epochs = 40
+    layer_entropy = 0.1
     learning_rate = 5e-3
     optimizer_momentum = (0.5, 0.999)
     batch_size = 16
