@@ -31,8 +31,8 @@ class AdaptiveStages(nn.Module):
         with torch.no_grad():
             return self.forward()
 
-    def set_inverse(self, inverse: bool = False) -> None:
-        self.inverse = inverse
+    def set_inverse(self) -> None:
+        self.inverse = not self.inverse
 
 
 def adap_loss_function(a, b, w=None,
@@ -52,9 +52,10 @@ def adap_loss_function(a, b, w=None,
 
     # Entropy penalty
     gini = 1 - torch.sum((w / len(a)) ** 2)
+    penalty = 1.0 / gini
 
     # Weight loss with entropy
-    return loss + 2 * w_entropy * gini
+    return loss + 2 * w_entropy * penalty
 
 
 def cal_anomaly_map(a,b, w=None, out_size=224, amap_mode='mul'):

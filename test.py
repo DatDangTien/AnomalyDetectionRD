@@ -90,7 +90,6 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
     bn.eval()
     decoder.eval()
     layer_attn.eval()
-    layer_attn.set_inverse(weight_inverse)
     gt_list_px = []
     pr_list_px = []
     gt_list_sp = []

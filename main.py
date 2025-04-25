@@ -222,7 +222,11 @@ def train(dataset, _class_, filter=None, filter_name=None):
             print(f'{name}: {value.data}\n')
 
         if (epoch + 1) % 20 == 0:
+            # Inverse adap weight for evaluation
+            layer_attn.set_inverse()
             eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
+            # Inverse back for training
+            layer_attn.set_inverse()
             print('AUROC_AL: {}, AUROC_AD: {}, PRO: {}'.format(*eva[:3]))
 
         #
@@ -258,7 +262,7 @@ if __name__ == '__main__':
     epochs = 200
     # epochs = 40
     weight_inverse = True
-    layer_entropy = 1.0
+    layer_entropy = 0.5
     learning_rate = 5e-3
     optimizer_momentum = (0.5, 0.999)
     batch_size = 16
