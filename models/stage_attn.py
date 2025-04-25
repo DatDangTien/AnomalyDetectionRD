@@ -31,6 +31,9 @@ class AdaptiveStages(nn.Module):
         with torch.no_grad():
             return self.forward()
 
+    def set_inverse(self, inverse: bool = False) -> None:
+        self.inverse = inverse
+
 
 def adap_loss_function(a, b, w=None,
                        loss_type='cosine',
@@ -47,6 +50,7 @@ def adap_loss_function(a, b, w=None,
                                              b[item].view(b[item].shape[0], -1)))
         loss = loss + w[item] * stage_loss
 
+    # Entropy penalty
     gini = 1 - torch.sum((w / len(a)) ** 2)
 
     # Weight loss with entropy

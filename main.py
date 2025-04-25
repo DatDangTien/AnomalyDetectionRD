@@ -155,7 +155,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3)
+    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -218,7 +218,8 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                                                                             val_time - epoch_time,
                                                                                             time.time()-epoch_time))
 
-        print(layer_attn.get_weight())
+        for name, value in layer_attn.named_parameters():
+            print(f'{name}: {value.data}\n')
 
         if (epoch + 1) % 20 == 0:
             eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
@@ -256,7 +257,8 @@ if __name__ == '__main__':
     image_size = 224
     epochs = 200
     # epochs = 40
-    layer_entropy = 0.1
+    weight_inverse = True
+    layer_entropy = 1.0
     learning_rate = 5e-3
     optimizer_momentum = (0.5, 0.999)
     batch_size = 16

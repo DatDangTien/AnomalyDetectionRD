@@ -90,6 +90,7 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
     bn.eval()
     decoder.eval()
     layer_attn.eval()
+    layer_attn.set_inverse(weight_inverse)
     gt_list_px = []
     pr_list_px = []
     gt_list_sp = []
@@ -211,7 +212,7 @@ def test(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3)
+    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -227,6 +228,8 @@ def test(dataset, _class_):
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
     layer_attn.load_state_dict(ckp['layer_attn'])
+    print(layer_attn.get_weight())
+
     result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn,
                                 _class_,predict_path, hist=True, timing=True)
     print(f'{_class_}: ' + ' '.join([str(me_num) for me_num in result_metrics]))
@@ -281,7 +284,7 @@ def visualize(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3)
+    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -579,6 +582,7 @@ if __name__ == '__main__':
     print(device)
     backbone = 'wres50'
     image_size = 224
+    weight_inverse = False
 
     item_list = []
     res_path = ''
