@@ -34,17 +34,18 @@ class AdaptiveStages(nn.Module):
 
 def adap_loss_function(a, b, w=None,
                        loss_type='cosine',
-                       w_entropy=0.01):
+                       w_entropy=0.01,
+                       device='cpu'):
     cos_loss = torch.nn.CosineSimilarity()
 
     if w is None:
         w = torch.ones(len(a)).float()
 
-    loss = 0
+    loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
         stage_loss = torch.mean(1 - cos_loss(a[item].view(a[item].shape[0], -1),
                                              b[item].view(b[item].shape[0], -1)))
-        loss += w[item] * stage_loss
+        loss = loss + w[item] * stage_loss
 
     gini = 1 - torch.sum((w / len(a)) ** 2)
 

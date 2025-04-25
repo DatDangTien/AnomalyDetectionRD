@@ -219,14 +219,16 @@ def test(dataset, _class_):
     layer_attn = layer_attn.to(device)
     ckp = torch.load(ckp_path, map_location=device)
     ckp = format_state_dict(ckp)    # Stripe module. prefix by DataParallel
-    print(ckp.keys())
+    # print(ckp.keys())
+    print(layer_attn.get_weight())
+
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:
             ckp['bn'].pop(k)
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
     layer_attn.load_state_dict(ckp['layer_attn'])
-    result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn(),
+    result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn,
                                 _class_,predict_path, hist=True, timing=True)
     print(f'{_class_}: ' + ' '.join([str(me_num) for me_num in result_metrics]))
     return result_metrics

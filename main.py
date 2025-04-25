@@ -190,7 +190,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
             inputs = encoder(img)
             outputs = decoder(bn(inputs))#bn(inputs))
             # loss = loss_function(inputs, outputs)
-            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=0.01)
+            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=0.01, device=device)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
