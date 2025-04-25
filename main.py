@@ -194,6 +194,9 @@ def train(dataset, _class_, filter=None, filter_name=None):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            # grad
+            for name, param in layer_attn.named_parameters():
+                print(param.grad)
             loss_list.append(loss.item())
         val_time = time.time()
         loss_dict['train'][epoch] = np.mean(loss_list)
