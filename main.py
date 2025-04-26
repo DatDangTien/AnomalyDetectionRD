@@ -228,10 +228,14 @@ def train(dataset, _class_, filter=None, filter_name=None):
         else:
             patience_counter += 1
             if patience_counter >= patience:
-                freeze_layer_attn = False
-                early_stop_delay = fusion_epochs
-                print('Unfreeze layer_attn')
-                layer_attn.unfreeze()
+                if freeze_layer_attn:
+                    freeze_layer_attn = False
+                    early_stop_delay = fusion_epochs
+                    print('Unfreeze layer_attn')
+                    layer_attn.unfreeze()
+                else:
+                    # Layer Attn 20 epochs fixed.
+                    continue
 
         if early_stop_delay == 1:
             print('Early stop!')
