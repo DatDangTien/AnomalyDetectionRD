@@ -227,6 +227,8 @@ def test(dataset, _class_):
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
     layer_attn.load_state_dict(ckp['layer_attn'])
+    for k, v in layer_attn.named_parameters():
+        print(f'{k}: {v}')
     print(layer_attn.get_weight())
 
     result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn,
@@ -581,7 +583,7 @@ if __name__ == '__main__':
     print(device)
     backbone = 'wres50'
     image_size = 224
-    weight_inverse = True
+    weight_inverse = False
 
     item_list = []
     res_path = ''

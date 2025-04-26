@@ -178,12 +178,23 @@ def train(dataset, _class_, filter=None, filter_name=None):
     eva = None
     best_val_loss = float('inf')
     patience_counter = 0
+    early_stop_delay = 0
+    freeze_layer_attn = True
+
+    #  For fusion last epochs:
+    #  Init flag: freeze layer_attn
+    #  Unfreeze if epoch == 180
+    #  Unfreeze if early stop, delay counter = 20
+
     train_time = time.time()
     for epoch in range(epochs):
         epoch_time = time.time()
         bn.train()
         decoder.train()
-        layer_attn.train()
+        if freeze_layer_attn:
+            layer_attn.eval()
+        else:
+            layer_attn.train()
         loss_list = []
         for img, _ in train_dataloader:
             img = img.to(device)
@@ -199,7 +210,13 @@ def train(dataset, _class_, filter=None, filter_name=None):
         loss_dict['train'][epoch] = np.mean(loss_list)
         loss_dict['val'][epoch] = validation(encoder, bn, decoder, layer_attn, val_dataloader, device)
 
+        if epoch == epochs - fusion_epochs:
+            freeze_layer_attn = False
+            print('Unfreeze layer_attn')
+            layer_attn.unfreeze()
+
         if loss_dict['val'][epoch] < best_val_loss:
+            print(f'Best epoch: {epoch}')
             best_val_loss = loss_dict['val'][epoch]
             patience_counter = 0
             torch.save({'bn': bn.state_dict(),
@@ -208,8 +225,17 @@ def train(dataset, _class_, filter=None, filter_name=None):
         else:
             patience_counter += 1
             if patience_counter >= patience:
-                print('Early stopping!')
-                break
+                freeze_layer_attn = False
+                early_stop_delay = fusion_epochs
+                print('Unfreeze layer_attn')
+                layer_attn.unfreeze()
+
+        if early_stop_delay == 1:
+            print('Early stop!')
+            break
+
+        if early_stop_delay > 0:
+            early_stop_delay -= 1
 
 
         print('epoch [{}/{}]: loss:{:.4f}, Train time: {:.5f}s, Epoch time: {:.5f}s'.format(epoch + 1,
@@ -261,8 +287,9 @@ if __name__ == '__main__':
     image_size = 224
     epochs = 200
     # epochs = 40
+    fusion_epochs = 20
     weight_inverse = True
-    layer_entropy = 0.01
+    layer_entropy = 0.05
     learning_rate = 5e-3
     optimizer_momentum = (0.5, 0.999)
     batch_size = 16

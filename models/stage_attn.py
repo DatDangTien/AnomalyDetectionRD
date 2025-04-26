@@ -31,8 +31,17 @@ class AdaptiveStages(nn.Module):
         with torch.no_grad():
             return self.forward()
 
+
+    def freeze(self) -> None:
+        self.weight.requires_grad = False
+
+    def unfreeze(self) -> None:
+        self.weight.requires_grad = True
+
     def set_inverse(self) -> None:
         self.inverse = not self.inverse
+
+
 
 
 def adap_loss_function(a, b, w=None,
