@@ -581,7 +581,7 @@ if __name__ == '__main__':
     print(device)
     backbone = 'wres50'
     image_size = 224
-    weight_inverse = False
+    weight_inverse = True
 
     item_list = []
     res_path = ''

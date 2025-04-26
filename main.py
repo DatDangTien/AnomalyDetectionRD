@@ -75,7 +75,7 @@ def validation(encoder, bn, decoder, layer_attn, val_dataloader, device):
             inputs = encoder(img)
             outputs = decoder(bn(inputs))
             # loss = loss_function(inputs, outputs)
-            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=0.01)
+            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=layer_entropy, device=device)
             loss_list.append(loss.item())
     return np.mean(loss_list)
 
@@ -262,7 +262,7 @@ if __name__ == '__main__':
     epochs = 200
     # epochs = 40
     weight_inverse = True
-    layer_entropy = 0.08
+    layer_entropy = 0.05
     learning_rate = 5e-3
     optimizer_momentum = (0.5, 0.999)
     batch_size = 16
