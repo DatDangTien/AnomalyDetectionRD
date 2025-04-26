@@ -179,7 +179,10 @@ def train(dataset, _class_, filter=None, filter_name=None):
     best_val_loss = float('inf')
     patience_counter = 0
     early_stop_delay = 0
+
+    # Freeze layer_attn
     freeze_layer_attn = True
+    layer_attn.freeze()
 
     #  For fusion last epochs:
     #  Init flag: freeze layer_attn
