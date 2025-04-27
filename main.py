@@ -253,7 +253,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
         for name, value in layer_attn.named_parameters():
             print(f'{name}: {value.data}\n')
 
-        if (epoch + 1) % 1 == 0:
+        if (epoch + 1) % 20 == 0:
             # Inverse adap weight for evaluation
             layer_attn.set_inverse()
             eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
