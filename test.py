@@ -112,7 +112,6 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
             start = time.time()
 
         for img, gt, label, _ in dataloader:
-            print(img.shape)
             img = img.to(device)
             inputs = encoder(img)
             outputs = decoder(bn(inputs))
