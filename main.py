@@ -295,7 +295,7 @@ if __name__ == '__main__':
     # epochs = 40
     fusion_epochs = 20
     weight_inverse = True
-    layer_entropy = 0.01
+    layer_entropy = 0.04
     learning_rate = 5e-3
     optimizer_momentum = (0.5, 0.999)
     batch_size = 16
