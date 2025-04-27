@@ -153,6 +153,7 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
             print(f'Inference time: {inference_time:.4f} sec')
 
         if len(aupro_list) > 0:
+            auroc_px  = round(roc_auc_score(gt_list_px, pr_list_px), 3)
             aupro_sp = round(np.mean(aupro_list), 3)
             ap_px = round(average_precision_score(gt_list_px, pr_list_px), 3)
 
