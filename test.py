@@ -107,8 +107,10 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
 
     with torch.no_grad():
         if timing:
-            torch.cuda.synchronize()
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
             start = time.time()
+
         for img, gt, label, _ in dataloader:
             img = img.to(device)
             inputs = encoder(img)
@@ -124,15 +126,11 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
             anomaly_score = np.max(anomaly_map)
 
             if timing:
-                torch.cuda.synchronize()
+                if torch.cuda.is_available():
+                    torch.cuda.synchronize()
                 end = time.time()
                 inference_time += (end - start)
 
-            # print(gt)
-            # if gt is None:
-            #     print('None')
-            # BUG on Colab:
-            # UnboundLocalError: cannot access local variable 'gt' where it is not associated with a value
             if gt.isnan().any():
                 gt_list_sp.append(label.cpu().numpy().astype(int))
             else:
@@ -147,13 +145,14 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
             pr_list_sp.append(anomaly_score)
 
             if timing:
-                torch.cuda.synchronize()
+                if torch.cuda.is_available():
+                    torch.cuda.synchronize()
                 start = time.time()
 
         if inference_time > 0:
             print(f'Inference time: {inference_time:.4f} sec')
 
-        if not gt.isnan().any():
+        if len(aupro_list) > 0:
             aupro_sp = round(np.mean(aupro_list), 3)
             ap_px = round(average_precision_score(gt_list_px, pr_list_px), 3)
 
@@ -583,7 +582,7 @@ if __name__ == '__main__':
     print(device)
     backbone = 'wres50'
     image_size = 224
-    weight_inverse = False
+    weight_inverse = True
 
     item_list = []
     res_path = ''
