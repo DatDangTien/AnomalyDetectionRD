@@ -111,7 +111,7 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
                 torch.cuda.synchronize()
             start = time.time()
 
-        for img, gt, label, _ in dataloader:
+        for (img, gt, label, _) in dataloader:
             print(img.shape)
             img = img.to(device)
             inputs = encoder(img)
