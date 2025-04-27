@@ -182,8 +182,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
 
     # Freeze layer_attn
     freeze_layer_attn = True
-    layer_attn.freeze()
-
+    layer_attn.module.freeze() if isinstance(layer_attn,DP) else layer_attn.freeze()
     #  For fusion last epochs:
     #  Init flag: freeze layer_attn
     #  Unfreeze if epoch == 180
@@ -216,7 +215,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
         if epoch == epochs - fusion_epochs:
             freeze_layer_attn = False
             print('Unfreeze layer_attn')
-            layer_attn.unfreeze()
+            layer_attn.module.unfreeze() if isinstance(layer_attn,DP) else layer_attn.unfreeze()
 
         if loss_dict['val'][epoch] < best_val_loss:
             print(f'Best epoch: {epoch}')
@@ -232,7 +231,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
                     freeze_layer_attn = False
                     early_stop_delay = fusion_epochs
                     print('Unfreeze layer_attn')
-                    layer_attn.unfreeze()
+                    layer_attn.module.unfreeze() if isinstance(layer_attn, DP) else layer_attn.unfreeze()
                 else:
                     # Layer Attn 20 epochs fixed.
                     continue
