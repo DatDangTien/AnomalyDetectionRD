@@ -156,6 +156,7 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
             aupro_sp = round(np.mean(aupro_list), 3)
             ap_px = round(average_precision_score(gt_list_px, pr_list_px), 3)
 
+        print(len(gt_list_sp), len(pr_list_sp))
         auroc_sp = round(roc_auc_score(gt_list_sp, pr_list_sp), 3)
         ap_sp = round(average_precision_score(gt_list_sp, pr_list_sp), 3)
 
