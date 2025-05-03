@@ -220,9 +220,9 @@ class MambaVisionMixer(nn.Module):
         sz = rearrange(xz, "b l d -> b d l")
         x, z = xz.chunk(2, dim=1)
         A = -torch.exp(self.A_log.float())
-        x = F.silu(F.conv1d(input=x, weight=self.conv1d_x.weight, bias=self.conv1_x.bias,
+        x = F.silu(F.conv1d(input=x, weight=self.conv1d_x.weight, bias=self.conv1d_x.bias,
                             padding='same', groups=self.d_inner//2))
-        z = F.silu(F.conv1d(input=z, weight=self.conv1d_z.weight, bias=self.conv1_z.bias,
+        z = F.silu(F.conv1d(input=z, weight=self.conv1d_z.weight, bias=self.conv1d_z.bias,
                             padding='same', groups=self.d_inner//2))
         x_db1 = self.x_proj(rearrange(x, "b d l -> (b l) d"))
         dt, B, C = torch.split(x_db1, [self.dt_rank, self.d_state, self.d_state], dim=-1)
