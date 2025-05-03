@@ -103,6 +103,7 @@ class ConvBlock(nn.Module):
                  layer_scale=None,
                  kernel_size=3
                  ):
+        super().__init__()
         self.conv1 = nn.Conv2d(dim, dim, kernel_size=kernel_size, stride=1, padding=1)
         self.norm1 = nn.BatchNorm2d(dim, eps=1e-5)
         self.act1 = nn.GELU(approximate= 'tanh')
