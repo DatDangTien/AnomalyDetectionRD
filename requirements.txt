@@ -11,3 +11,4 @@ opencv-python== 4.11.0.86
 matplotlib== 3.9.2
 seaborn== 0.12.2
 pandas== 2.2.3
+einops==0.8.1

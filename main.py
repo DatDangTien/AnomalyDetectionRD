@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader, random_split
 from models.resnet import wide_resnet50_2, wide_resnet101_2
 from models.de_resnet import de_wide_resnet50_2, de_wide_resnet101_2
 from models.convnext import convnext_tiny, convnext_small, convnext_base, convnext_large
+from models.mambavision import mambavision_t, mambavision_s, mambavision_b, mambavision_l
 from models.convnext import de_convnext_tiny, de_convnext_small, de_convnext_base, de_convnext_large
 from models.stage_attn import AdaptiveStages, adap_loss_function
 from dataset import MVTecDataset, GFCDataset, train_collate
@@ -152,6 +153,16 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                                  collate_fn=train_collate, num_workers=4)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
+
+    encoder_fn = backbone_module[backbone][0]
+    encoder = encoder_fn(pretrained=True)
+    encoder = encoder.to(device)
+    for epoch in range(epochs):
+        for img, _ in train_dataloader:
+            img = img.to(device)
+            inputs = encoder(img)
+
+
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
@@ -280,12 +291,17 @@ backbone_module ={
     'convnext-t': (convnext_tiny, de_convnext_tiny),
     'convnext-s': (convnext_small, de_convnext_small),
     'convnext-b': (convnext_base, de_convnext_base),
-    'convnext-l': (convnext_large, de_convnext_large)
+    'convnext-l': (convnext_large, de_convnext_large),
+    'mambavision-t': (mambavision_t),
+    'mambavision-s': (mambavision_s),
+    'mambavision-b': (mambavision_b),
+    'mambavision-l': (mambavision_l),
 }
 
 if __name__ == '__main__':
     backbones = ['resnet50', 'resnet101', 'wres50', 'wres101',
-                 'convnext-t', 'convnext-s', 'convnext-b', 'convnext-l']
+                 'convnext-t', 'convnext-s', 'convnext-b', 'convnext-l',
+                 'mambavision-t', 'mambavision-s', 'mambavision-b', 'mambavision-l']
 
     SEED = 111
     setup_seed(SEED)
@@ -300,7 +316,7 @@ if __name__ == '__main__':
     optimizer_momentum = (0.5, 0.999)
     batch_size = 16
     # batch_size = 8
-    backbone = 'wres50'
+    backbone = 'mambavision-b'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 
