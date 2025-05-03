@@ -63,7 +63,7 @@ class Downsample(nn.Module):
         else:
             dim_out = 2 * dim
         self.reduction = nn.Sequential(
-            nn.Conv2d(dim, dim_out, kernel_size=3, stride=2, padding=1)
+            nn.Conv2d(dim, dim_out, kernel_size=3, stride=2, padding=1, bias=False)
         )
 
 
@@ -81,10 +81,10 @@ class PatchEmbed(nn.Module):
         super().__init__()
         self.proj = nn.Identity()
         self.conv_down = nn.Sequential(
-            nn.Conv2d(in_chans, in_dim, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_chans, in_dim, kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(in_dim, eps=1e-4),
             nn.ReLU(),
-            nn.Conv2d(in_dim, dim, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_dim, dim, kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(dim, eps=1e-4),
             nn.ReLU(),
         )
@@ -598,7 +598,7 @@ class MambaVision(nn.Module):
               model_url: str
               ):
         state_dict = load_state_dict_from_url(model_url)
-        print(state_dict.keys())
+        print(state_dict['state_dict'].keys())
         self.load_state_dict(state_dict['state_dict'])
 
 def mambavision_t(
