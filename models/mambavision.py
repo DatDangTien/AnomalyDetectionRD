@@ -215,19 +215,19 @@ class MambaVisionMixer(nn.Module):
         :param hidden_states: (B, L, D)
         :return: same shape as hidden_states
         """
-        print('Mixer')
-        print(hidden_states.shape)
+        print('Mixer', hidden_states.shape)
         _, seqlen, _ = hidden_states.shape
         xz = self.in_proj(hidden_states)
         xz = rearrange(xz, "b l d -> b d l")
         x, z = xz.chunk(2, dim=1)
-        print(x.shape, z.shape)
+        print('x,z', x.shape, z.shape)
         A = -torch.exp(self.A_log.float())
         x = F.silu(F.conv1d(input=x, weight=self.conv1d_x.weight, bias=self.conv1d_x.bias,
                             padding='same', groups=self.d_inner//2))
         z = F.silu(F.conv1d(input=z, weight=self.conv1d_z.weight, bias=self.conv1d_z.bias,
                             padding='same', groups=self.d_inner//2))
         x_db1 = self.x_proj(rearrange(x, "b d l -> (b l) d"))
+        print('x_db1', x_db1.shape)
         dt, B, C = torch.split(x_db1, [self.dt_rank, self.d_state, self.d_state], dim=-1)
         dt = rearrange(self.dt_proj(dt), "(b l) d -> b d l", l=seqlen)
         B = rearrange(B, "(b l) dstate -> b dstate l", l=seqlen).contiguous()
@@ -242,10 +242,12 @@ class MambaVisionMixer(nn.Module):
                               delta_bias=self.dt_proj.bias.float(),
                               delta_softplus=True,
                               return_last_state=None)
-
+        print('y', y.shape)
         y = torch.cat([y,z], dim=1)
+        print('y_cat', y.shape)
         y = rearrange(y, "b d l -> b l d")
         out = self.out_proj(y)
+        print('Mixer_out', out.shape)
         return out
 
 class Attention(nn.Module):
@@ -385,12 +387,11 @@ class Block(nn.Module):
         self.gamma_2 = nn.Parameter(layer_scale * torch.ones(dim)) if use_layer_scale else 1
 
     def forward(self, x: Tensor) -> Tensor:
-        print('Block')
-        print(x.shape)
+        print('Module:', x.shape)
         x = x + self.drop_path(self.gamma_1 * self.mixer(self.norm1(x)))
-        print(x.shape)
+        print('Mixer/Attention', x.shape)
         x = x + self.drop_path(self.gamma_2 * self.mlp(self.norm2(x)))
-        print(x.shape)
+        print('MLP', x.shape)
         return x
 
 
@@ -481,9 +482,11 @@ class MambaVisionLayer(nn.Module):
                 Hp, Wp = H, W
             x = window_partition(x, self.window_size)
 
+        print('Window:', x.shape)
         # Feature extract
         for _, blk in enumerate(self.blocks):
             x = blk(x)
+        print('Block:', x.shape)
 
         # Reverse window transform
         if self.transformer_block:
@@ -491,6 +494,7 @@ class MambaVisionLayer(nn.Module):
             if pad_r > 0 or pad_b > 0:
                 x = x[:, :, :H, :W].contiguous()
         x = self.downsample(x) if self.downsample is not None else x
+        print('Downsample:', x.shape)
         return x
 
 class MambaVision(nn.Module):
@@ -586,8 +590,10 @@ class MambaVision(nn.Module):
         print(x.shape)
         for level in self.levels[0:4]:
             x = level(x)
+            print(f'Layer {level}')
             print(x.shape)
             feature.append(x)
+        print('----------------')
         # x = self.norm(x)
         # x = self.avgpool(x)
         # x = torch.flatten(x, 1)
@@ -605,7 +611,7 @@ class MambaVision(nn.Module):
               model_url: str
               ):
         state_dict = load_state_dict_from_url(model_url)
-        print(state_dict['state_dict'].keys())
+        # print(state_dict['state_dict'].keys())
         self.load_state_dict(state_dict['state_dict'])
 
 def mambavision_t(
