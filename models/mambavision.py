@@ -7,7 +7,7 @@ from models.convnext import DropPath, LayerNorm
 import math
 from functools import partial
 from einops import rearrange, repeat
-from mamba_ssm.ops.slective_scan_interface import selective_scan_fn
+from mamba_ssm.ops.selective_scan_interface import selective_scan_fn
 from typing import Type, Any, List, Tuple
 
 
