@@ -599,7 +599,7 @@ class MambaVision(nn.Module):
               ):
         state_dict = load_state_dict_from_url(model_url)
         print(state_dict.keys())
-        self.load_state_dict(state_dict)
+        self.load_state_dict(state_dict['state_dict'])
 
 def mambavision_t(
         pretrained=False,
