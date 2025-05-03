@@ -478,10 +478,10 @@ class MambaVisionLayer(nn.Module):
             if pad_r > 0 or pad_b > 0:
                 x = F.pad(x , (0, pad_r, 0, pad_b))
                 _, _, Hp, Wp = x.shape
+                print('Pad:', self.window_size, Hp, Wp)
             else:
                 Hp, Wp = H, W
             x = window_partition(x, self.window_size)
-        print('Window partition:', Hp, Wp)
         print('Window:', x.shape)
         # Feature extract
         for _, blk in enumerate(self.blocks):
