@@ -215,10 +215,13 @@ class MambaVisionMixer(nn.Module):
         :param hidden_states: (B, L, D)
         :return: same shape as hidden_states
         """
+        print('Mixer')
+        print(hidden_states.shape)
         _, seqlen, _ = hidden_states.shape
         xz = self.in_proj(hidden_states)
-        sz = rearrange(xz, "b l d -> b d l")
+        xz = rearrange(xz, "b l d -> b d l")
         x, z = xz.chunk(2, dim=1)
+        print(x.shape, z.shape)
         A = -torch.exp(self.A_log.float())
         x = F.silu(F.conv1d(input=x, weight=self.conv1d_x.weight, bias=self.conv1d_x.bias,
                             padding='same', groups=self.d_inner//2))
@@ -382,8 +385,12 @@ class Block(nn.Module):
         self.gamma_2 = nn.Parameter(layer_scale * torch.ones(dim)) if use_layer_scale else 1
 
     def forward(self, x: Tensor) -> Tensor:
+        print('Block')
+        print(x.shape)
         x = x + self.drop_path(self.gamma_1 * self.mixer(self.norm1(x)))
+        print(x.shape)
         x = x + self.drop_path(self.gamma_2 * self.mlp(self.norm2(x)))
+        print(x.shape)
         return x
 
 
