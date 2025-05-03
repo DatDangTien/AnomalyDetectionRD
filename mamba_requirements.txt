@@ -1,0 +1,2 @@
+--no-build-isolation
+mamba-ssm
