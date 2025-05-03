@@ -481,7 +481,7 @@ class MambaVisionLayer(nn.Module):
             else:
                 Hp, Wp = H, W
             x = window_partition(x, self.window_size)
-
+        print('Window partition:', Hp, Wp)
         print('Window:', x.shape)
         # Feature extract
         for _, blk in enumerate(self.blocks):
