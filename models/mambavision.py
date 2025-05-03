@@ -577,7 +577,7 @@ class MambaVision(nn.Module):
         x = self.patch_embed(x)
         print('----------------')
         print(x.shape)
-        for level in self.levels[0:3]:
+        for level in self.levels[0:4]:
             x = level(x)
             print(x.shape)
             feature.append(x)
