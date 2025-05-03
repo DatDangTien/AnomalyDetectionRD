@@ -154,7 +154,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
 
-    encoder_fn = backbone_module[backbone][0]
+    encoder_fn = backbone_module[backbone]
     encoder = encoder_fn(pretrained=True)
     encoder = encoder.to(device)
     for epoch in range(epochs):
