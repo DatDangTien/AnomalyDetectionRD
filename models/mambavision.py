@@ -752,6 +752,7 @@ class DeMambaVisionLayer(nn.Module):
             transformer_blocks: list of transformer blocks.
         """
         super().__init__()
+        print(dim)
         self.upsample = Upsample(dim=dim) if upsample else None
         dim = dim // 2 if upsample else dim
         self.conv = conv
@@ -850,16 +851,16 @@ class DeMambaVision(nn.Module):
         super().__init__()
         print(depths)
         # Remove final stage
-        # depths = depths[:-1]
+        depths = depths[:-1]
         # num_heads = num_heads[:-1]
         # window_size = window_size[:-1]
         dpr = [x.item() for x in torch.linspace(drop_path_rate, 0, sum(depths))]
         self.levels = nn.ModuleList([])
-        for i in range(len(depths) - 1):
+        for i in range(len(depths)):
             conv = True if (i < 2) else False
             level = DeMambaVisionLayer(
                     # dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
-                    dim=int(dim * 2 ** (len(depths) - i)),
+                    dim=int(dim * 2 ** (len(depths) - i + 1)),
                     depth=depths[i],
                     num_heads=num_heads[i],
                     window_size=window_size[i],
