@@ -1154,7 +1154,7 @@ def demambavision_t(
     return model
 
 
-def mambavision_s(
+def demambavision_s(
         pretrained=False,
         **kwargs
 ):
@@ -1180,7 +1180,7 @@ def mambavision_s(
     return model
 
 
-def mambavision_b(
+def demambavision_b(
         pretrained=False,
         **kwargs
 ):
@@ -1208,7 +1208,7 @@ def mambavision_b(
     return model
 
 
-def mambavision_l(
+def demambavision_l(
         pretrained=False,
         **kwargs
 ):
