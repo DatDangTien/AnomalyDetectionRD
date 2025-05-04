@@ -252,9 +252,12 @@ def train(dataset, _class_, filter=None, filter_name=None):
                         early_stop_delay = fusion_epochs
                         print('Unfreeze layer_attn')
                         layer_attn.module.unfreeze() if isinstance(layer_attn, DP) else layer_attn.unfreeze()
+                    else:
+                        # Layer Attn 20 epochs fixed.
+                        continue
                 else:
-                    # Layer Attn 20 epochs fixed.
-                    continue
+                    print('Early stop!')
+                    break
 
         if early_stop_delay == 1:
             print('Early stop!')
