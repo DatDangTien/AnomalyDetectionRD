@@ -75,7 +75,10 @@ def validation(encoder, bn, decoder, layer_attn, val_dataloader, device):
             inputs = encoder(img)
             outputs = decoder(bn(inputs))
             # loss = loss_function(inputs, outputs)
-            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=layer_entropy, device=device)
+            if layer_attn:
+                loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=layer_entropy, device=device)
+            else:
+                loss = adap_loss_function(inputs, outputs, w_entropy=layer_entropy, device=device)
             loss_list.append(loss.item())
     return np.mean(loss_list)
 
@@ -156,7 +159,10 @@ def train(dataset, _class_, filter=None, filter_name=None):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
+    if use_layer_attn:
+        layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
+    else:
+        layer_attn = None
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -167,7 +173,8 @@ def train(dataset, _class_, filter=None, filter_name=None):
         encoder = DP(encoder)
         bn = DP(bn)
         decoder = DP(decoder)
-        layer_attn = DP(layer_attn)
+        if layer_attn:
+            layer_attn = DP(layer_attn)
 
     optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters())+list(layer_attn.parameters()),
                                  lr=learning_rate, betas=optimizer_momentum)
@@ -183,8 +190,9 @@ def train(dataset, _class_, filter=None, filter_name=None):
     early_stop_delay = 0
 
     # Freeze layer_attn
-    freeze_layer_attn = True
-    layer_attn.module.freeze() if isinstance(layer_attn,DP) else layer_attn.freeze()
+    if use_layer_attn:
+        freeze_layer_attn = True
+        layer_attn.module.freeze() if isinstance(layer_attn,DP) else layer_attn.freeze()
     #  For fusion last epochs:
     #  Init flag: freeze layer_attn
     #  Unfreeze if epoch == 180
@@ -195,17 +203,21 @@ def train(dataset, _class_, filter=None, filter_name=None):
         epoch_time = time.time()
         bn.train()
         decoder.train()
-        if freeze_layer_attn:
-            layer_attn.eval()
-        else:
-            layer_attn.train()
+        if use_layer_attn:
+            if freeze_layer_attn:
+                layer_attn.eval()
+            else:
+                layer_attn.train()
         loss_list = []
         for img, _ in train_dataloader:
             img = img.to(device)
             inputs = encoder(img)
             outputs = decoder(bn(inputs))#bn(inputs))
             # loss = loss_function(inputs, outputs)
-            loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=layer_entropy, device=device)
+            if use_layer_attn:
+                loss = adap_loss_function(inputs, outputs, layer_attn(), w_entropy=layer_entropy, device=device)
+            else:
+                loss = adap_loss_function(inputs, outputs, w_entropy=layer_entropy, device=device)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -214,26 +226,32 @@ def train(dataset, _class_, filter=None, filter_name=None):
         loss_dict['train'][epoch] = np.mean(loss_list)
         loss_dict['val'][epoch] = validation(encoder, bn, decoder, layer_attn, val_dataloader, device)
 
-        if epoch == epochs - fusion_epochs:
-            freeze_layer_attn = False
-            print('Unfreeze layer_attn')
-            layer_attn.module.unfreeze() if isinstance(layer_attn,DP) else layer_attn.unfreeze()
+        if use_layer_attn:
+            if epoch == epochs - fusion_epochs:
+                freeze_layer_attn = False
+                print('Unfreeze layer_attn')
+                layer_attn.module.unfreeze() if isinstance(layer_attn,DP) else layer_attn.unfreeze()
 
         if loss_dict['val'][epoch] < best_val_loss:
             print(f'Best epoch: {epoch}')
             best_val_loss = loss_dict['val'][epoch]
             patience_counter = 0
-            torch.save({'bn': bn.state_dict(),
-                        'decoder': decoder.state_dict(),
-                        'layer_attn': layer_attn.state_dict()}, ckp_path)
+            if use_layer_attn:
+                torch.save({'bn': bn.state_dict(),
+                            'decoder': decoder.state_dict(),
+                            'layer_attn': layer_attn.state_dict()}, ckp_path)
+            else:
+                torch.save({'bn': bn.state_dict(),
+                            'decoder': decoder.state_dict()}, ckp_path)
         else:
             patience_counter += 1
             if patience_counter >= patience:
-                if freeze_layer_attn:
-                    freeze_layer_attn = False
-                    early_stop_delay = fusion_epochs
-                    print('Unfreeze layer_attn')
-                    layer_attn.module.unfreeze() if isinstance(layer_attn, DP) else layer_attn.unfreeze()
+                if use_layer_attn:
+                    if freeze_layer_attn:
+                        freeze_layer_attn = False
+                        early_stop_delay = fusion_epochs
+                        print('Unfreeze layer_attn')
+                        layer_attn.module.unfreeze() if isinstance(layer_attn, DP) else layer_attn.unfreeze()
                 else:
                     # Layer Attn 20 epochs fixed.
                     continue
@@ -257,10 +275,12 @@ def train(dataset, _class_, filter=None, filter_name=None):
 
         if (epoch + 1) % 20 == 0:
             # Inverse adap weight for evaluation
-            layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
+            if use_layer_attn:
+                layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
             eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
             # Inverse back for training
-            layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
+            if use_layer_attn:
+                layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
             print('AUROC_AL: {}, AUROC_AD: {}, PRO: {}'.format(*eva[:3]))
 
         #
@@ -311,13 +331,17 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 
-    use_layer_attn = True
     patience = 20
 
     item_list = []
-    if sys.argv[1] == 'mvtec':
-        if len(sys.argv) > 2:
-            item_list = [sys.argv[2]]
+    # python main.py mambavision-s 0 gfc
+    if sys.argv[1] in backbones:
+        backbone = sys.argv[1]
+    use_layer_attn = False if sys.argv[2] == '0' else True
+
+    if sys.argv[3] == 'mvtec':
+        if len(sys.argv) > 5:
+            item_list = [sys.argv[4]]
         else:
             item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
                          'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
