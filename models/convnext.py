@@ -178,8 +178,7 @@ class BN_layer(nn.Module):
                 conv.append(LayerNorm(dims[j+1], eps=norm_eps))
                 conv.append(nn.GELU())
             self.mff.append(nn.Sequential(*conv))
-        # Should be named upsample instead.
-        # High-dim -> Low-dim
+
         self.downsample = nn.Sequential(
             nn.Conv2d(dims[num_states-1] * num_states, dims[num_states-1] * 2, kernel_size=2, stride=2),
             LayerNorm(dims[num_states-1] * 2, eps=norm_eps),

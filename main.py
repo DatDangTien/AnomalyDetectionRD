@@ -9,11 +9,10 @@ import numpy as np
 import random
 import os
 from torch.utils.data import DataLoader, random_split
-from models.resnet import wide_resnet50_2, wide_resnet101_2
-from models.de_resnet import de_wide_resnet50_2, de_wide_resnet101_2
-from models.convnext import convnext_tiny, convnext_small, convnext_base, convnext_large
-from models.mambavision import mambavision_t, mambavision_s, mambavision_b, mambavision_l
-from models.convnext import de_convnext_tiny, de_convnext_small, de_convnext_base, de_convnext_large
+import models.resnet as resnet
+import models.de_resnet as de_resnet
+import models.convnext as convnext
+import models.mambavision as mambavision
 from models.stage_attn import AdaptiveStages, adap_loss_function
 from dataset import MVTecDataset, GFCDataset, train_collate
 import torch.backends.cudnn as cudnn
@@ -154,15 +153,6 @@ def train(dataset, _class_, filter=None, filter_name=None):
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
 
-    encoder_fn = backbone_module[backbone]
-    encoder = encoder_fn(pretrained=True)
-    encoder = encoder.to(device)
-    for epoch in range(epochs):
-        for img, _ in train_dataloader:
-            img = img.to(device)
-            inputs = encoder(img)
-
-
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
@@ -284,18 +274,18 @@ def train(dataset, _class_, filter=None, filter_name=None):
     return eva
 
 backbone_module ={
-    'wres50': (wide_resnet50_2, de_wide_resnet50_2),
-    'wres101': (wide_resnet101_2, de_wide_resnet101_2),
-    'resnet50': (wide_resnet50_2, de_wide_resnet50_2),
-    'resnet101': (wide_resnet101_2, de_wide_resnet101_2),
-    'convnext-t': (convnext_tiny, de_convnext_tiny),
-    'convnext-s': (convnext_small, de_convnext_small),
-    'convnext-b': (convnext_base, de_convnext_base),
-    'convnext-l': (convnext_large, de_convnext_large),
-    'mambavision-t': (mambavision_t),
-    'mambavision-s': (mambavision_s),
-    'mambavision-b': (mambavision_b),
-    'mambavision-l': (mambavision_l),
+    'wres50': (resnet.wide_resnet50_2, de_resnet.de_wide_resnet50_2),
+    'wres101': (de_resnet.wide_resnet101_2, de_resnet.de_wide_resnet101_2),
+    'resnet50': (resnet.wide_resnet50_2, de_resnet.de_wide_resnet50_2),
+    'resnet101': (resnet.wide_resnet101_2, de_resnet.de_wide_resnet101_2),
+    'convnext-t': (convnext.convnext_tiny, convnext.de_convnext_tiny),
+    'convnext-s': (convnext.convnext_small, convnext.de_convnext_small),
+    'convnext-b': (convnext.convnext_base, convnext.de_convnext_base),
+    'convnext-l': (convnext.convnext_large, convnext.de_convnext_large),
+    'mambavision-t': (mambavision.mambavision_t, mambavision.demambavision_t()),
+    'mambavision-s': (mambavision.mambavision_s, mambavision.demambavision_s()),
+    'mambavision-b': (mambavision.mambavision_b, mambavision.demambavision_b()),
+    'mambavision-l': (mambavision.mambavision_l, mambavision.demambavision_l()),
 }
 
 if __name__ == '__main__':

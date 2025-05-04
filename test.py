@@ -1,10 +1,10 @@
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
-from models.resnet import wide_resnet50_2, wide_resnet101_2
-from models.de_resnet import de_wide_resnet50_2, de_wide_resnet101_2
-from models.convnext import convnext_tiny, convnext_small, convnext_base, convnext_large
-from models.convnext import de_convnext_tiny, de_convnext_small, de_convnext_base, de_convnext_large
+import models.resnet as resnet
+import models.de_resnet as de_resnet
+import models.convnext as convnext
+import models.mambavision as mambavision
 from dataset import MVTecDataset, GFCDataset, get_data_transforms
 from models.stage_attn import cal_anomaly_map, AdaptiveStages
 from torch.nn import functional as F
@@ -568,18 +568,22 @@ def compute_pro(masks: ndarray, amaps: ndarray, num_th: int = 200) -> None:
 #     return auroc_sp_max, auroc_sp_mean
 
 backbone_module ={
-    'wres50': (wide_resnet50_2, de_wide_resnet50_2),
-    'wres101': (wide_resnet101_2, de_wide_resnet101_2),
-    'resnet50': (wide_resnet50_2, de_wide_resnet50_2),
-    'resnet101': (wide_resnet101_2, de_wide_resnet101_2),
-    'convnext-t': (convnext_tiny, de_convnext_tiny),
-    'convnext-s': (convnext_small, de_convnext_small),
-    'convnext-b': (convnext_base, de_convnext_base),
-    'convnext-l': (convnext_large, de_convnext_large)
+    'wres50': (resnet.wide_resnet50_2, de_resnet.de_wide_resnet50_2),
+    'wres101': (de_resnet.wide_resnet101_2, de_resnet.de_wide_resnet101_2),
+    'resnet50': (resnet.wide_resnet50_2, de_resnet.de_wide_resnet50_2),
+    'resnet101': (resnet.wide_resnet101_2, de_resnet.de_wide_resnet101_2),
+    'convnext-t': (convnext.convnext_tiny, convnext.de_convnext_tiny),
+    'convnext-s': (convnext.convnext_small, convnext.de_convnext_small),
+    'convnext-b': (convnext.convnext_base, convnext.de_convnext_base),
+    'convnext-l': (convnext.convnext_large, convnext.de_convnext_large),
+    'mambavision-t': (mambavision.mambavision_t, mambavision.demambavision_t()),
+    'mambavision-s': (mambavision.mambavision_s, mambavision.demambavision_s()),
+    'mambavision-b': (mambavision.mambavision_b, mambavision.demambavision_b()),
+    'mambavision-l': (mambavision.mambavision_l, mambavision.demambavision_l()),
 }
 backbones = ['resnet50', 'resnet101', 'wres50', 'wres101',
-             'convnext-t', 'convnext-s', 'convnext-b', 'convnext-l']
-
+             'convnext-t', 'convnext-s', 'convnext-b', 'convnext-l',
+             'mambavision-t', 'mambavision-s', 'mambavision-b', 'mambavision-l']
 import sys
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
