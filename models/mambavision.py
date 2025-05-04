@@ -846,6 +846,7 @@ class DeMambaVision(nn.Module):
         dpr = [x.item() for x in torch.linspace(drop_path_rate, 0, sum(depths))]
         self.levels = nn.ModuleList([])
         for i in range(len(depths) - 1, -1, -1):
+            print(depths[i])
             conv = True if (i < 2) else False
             level = DeMambaVisionLayer(dim=int(dim * 2 ** (i+1)),
                                      depth=depths[i],
@@ -857,7 +858,7 @@ class DeMambaVision(nn.Module):
                                      conv=conv,
                                      drop=drop_rate,
                                      attn_drop=attn_drop_rate,
-                                     drop_path=dpr[sum(depths[:i+1]):sum(depths[:i]): -1],
+                                     drop_path=dpr[sum(depths[:i+1]):sum(depths[:i])-1: -1],
                                      upsample=(i < 2),
                                      layer_scale=layer_scale,
                                      layer_scale_conv=layer_scale_conv,
