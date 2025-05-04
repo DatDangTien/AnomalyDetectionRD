@@ -448,7 +448,6 @@ class MambaVisionLayer(nn.Module):
             layer_scale_conv: conv layer scaling coefficient.
             transformer_blocks: list of transformer blocks.
         """
-        print(transformer_blocks)
         super().__init__()
         self.conv = conv
         self.transformer_block = False
@@ -741,8 +740,6 @@ class DeMambaVisionLayer(nn.Module):
             layer_scale_conv: conv layer scaling coefficient.
             transformer_blocks: list of transformer blocks.
         """
-        print(transformer_blocks)
-        print(drop_path)
         super().__init__()
         self.conv = conv
         self.transformer_block = False

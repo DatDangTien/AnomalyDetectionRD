@@ -282,10 +282,10 @@ backbone_module ={
     'convnext-s': (convnext.convnext_small, convnext.de_convnext_small),
     'convnext-b': (convnext.convnext_base, convnext.de_convnext_base),
     'convnext-l': (convnext.convnext_large, convnext.de_convnext_large),
-    'mambavision-t': (mambavision.mambavision_t, mambavision.demambavision_t()),
-    'mambavision-s': (mambavision.mambavision_s, mambavision.demambavision_s()),
-    'mambavision-b': (mambavision.mambavision_b, mambavision.demambavision_b()),
-    'mambavision-l': (mambavision.mambavision_l, mambavision.demambavision_l()),
+    'mambavision-t': (mambavision.mambavision_t, mambavision.demambavision_t),
+    'mambavision-s': (mambavision.mambavision_s, mambavision.demambavision_s),
+    'mambavision-b': (mambavision.mambavision_b, mambavision.demambavision_b),
+    'mambavision-l': (mambavision.mambavision_l, mambavision.demambavision_l),
 }
 
 if __name__ == '__main__':
