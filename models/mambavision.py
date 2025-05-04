@@ -742,7 +742,8 @@ class DeMambaVisionLayer(nn.Module):
             transformer_blocks: list of transformer blocks.
         """
         super().__init__()
-        self.dim = dim
+        self.upsample = Upsample(dim=dim) if upsample else None
+        dim = dim // 2 if upsample else dim
         self.conv = conv
         self.transformer_block = False
         if conv:
@@ -772,13 +773,13 @@ class DeMambaVisionLayer(nn.Module):
             ])
             self.transformer_block = True
 
-        self.upsample = Upsample(dim=dim) if upsample else None
         self.do_gt = False
         self.window_size = window_size
 
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.upsample(x) if self.upsample is not None else x
+
         _, _, H, W = x.shape
 
         # Window transform
@@ -794,7 +795,6 @@ class DeMambaVisionLayer(nn.Module):
             x = window_partition(x, self.window_size)
         # print('Window:', x.shape)
         # Feature extract
-        print(self.dim)
         for _, blk in enumerate(self.blocks):
             x = blk(x)
         # print('Block:', x.shape)
