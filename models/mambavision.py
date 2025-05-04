@@ -92,6 +92,7 @@ class Upsample(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
+        # Special layer 4,4 -> 7,7
         if x.shape[2] == 4:
             x = self.upsample2(x)
         else:
@@ -627,7 +628,7 @@ class MambaVision(nn.Module):
         # x = self.norm(x)
         # x = self.avgpool(x)
         # x = torch.flatten(x, 1)
-        print([f.shape for f in feature])
+        # print([f.shape for f in feature])
         return feature
 
 
@@ -717,7 +718,7 @@ class BN_layer(nn.Module):
         x = self.downsample(x)
         # print(x.shape)
         x = self.oce(x)
-        print(x.shape)
+        # print(x.shape)
         return x
 
 
@@ -920,7 +921,7 @@ class DeMambaVision(nn.Module):
             feature.append(x)
         # print('----------------')
 
-        print([f.shape for f in feature[::-1]])
+        # print([f.shape for f in feature[::-1]])
         return feature[::-1]
 
 
