@@ -351,7 +351,7 @@ if __name__ == '__main__':
     # filter_list = [BilateralFilter(d=5), WaveletFilter()]
     # filter_name_list = ['bilateral', 'wavelet']
     for i in item_list:
-        train(sys.argv[1], i)
+        train(sys.argv[3], i)
         # for j in range(len(filter_list)):
         #     train(sys.argv[1], i, filter_list[j], filter_name_list[j])
 
