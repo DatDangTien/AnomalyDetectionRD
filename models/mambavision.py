@@ -741,6 +741,7 @@ class DeMambaVisionLayer(nn.Module):
             transformer_blocks: list of transformer blocks.
         """
         super().__init__()
+        self.dim = dim
         self.conv = conv
         self.transformer_block = False
         if conv:
@@ -791,6 +792,7 @@ class DeMambaVisionLayer(nn.Module):
             x = window_partition(x, self.window_size)
         # print('Window:', x.shape)
         # Feature extract
+        print(self.dim)
         for _, blk in enumerate(self.blocks):
             x = blk(x)
         # print('Block:', x.shape)
@@ -857,7 +859,7 @@ class DeMambaVision(nn.Module):
                                      attn_drop=attn_drop_rate,
                                      # drop_path=dpr[sum(depths[:i+1])-1:sum(depths[:i])-1 : -1],
                                      drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])][::-1],
-                                     upsample=(i < 2),
+                                     upsample=True,
                                      layer_scale=layer_scale,
                                      layer_scale_conv=layer_scale_conv,
                                      transformer_blocks=list(range(math.ceil(depths[i] / 2),depths[i])),
