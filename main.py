@@ -172,6 +172,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
     optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters())+list(layer_attn.parameters()),
                                  lr=learning_rate, betas=optimizer_momentum)
 
+    print(count_parameters(decoder), 'decoder params')
     print(count_parameters(decoder) + count_parameters(bn), 'params')
     print(measure_parameters(decoder) + measure_parameters(bn), 'Mb')
 

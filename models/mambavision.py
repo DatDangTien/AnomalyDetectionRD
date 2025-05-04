@@ -618,7 +618,7 @@ class MambaVision(nn.Module):
         # x = self.norm(x)
         # x = self.avgpool(x)
         # x = torch.flatten(x, 1)
-        print([f.shape for f in feature])
+        # print([f.shape for f in feature])
         return feature
 
 
@@ -900,7 +900,7 @@ class DeMambaVision(nn.Module):
             feature.append(x)
         # print('----------------')
 
-        print([f.shape for f in feature[::-1]])
+        # print([f.shape for f in feature[::-1]])
         return feature[::-1]
 
 

@@ -55,7 +55,6 @@ def adap_loss_function(a, b, w=None,
 
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
-        print(a[item].shape, b[item].shape)
         stage_loss = torch.mean(1 - cos_loss(a[item].view(a[item].shape[0], -1),
                                              b[item].view(b[item].shape[0], -1)))
         loss = loss + w[item] * stage_loss
