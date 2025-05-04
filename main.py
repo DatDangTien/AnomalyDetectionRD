@@ -41,8 +41,8 @@ def loss_function(a, b):
     cos_loss = torch.nn.CosineSimilarity()
     loss = 0
     for item in range(len(a)):
-        #print(a[item].shape)
-        #print(b[item].shape)
+        print(a[item].shape)
+        print(b[item].shape)
         #loss += 0.1*mse_loss(a[item], b[item])
         loss += torch.mean(1-cos_loss(a[item].view(a[item].shape[0],-1),
                                       b[item].view(b[item].shape[0],-1)))
@@ -306,7 +306,7 @@ if __name__ == '__main__':
     optimizer_momentum = (0.5, 0.999)
     batch_size = 16
     # batch_size = 8
-    backbone = 'mambavision-b'
+    backbone = 'mambavision-s'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 

@@ -692,14 +692,14 @@ class BN_layer(nn.Module):
 
     # Multiscale feature fusion
     def forward(self, x: List[Tensor]) -> Tensor:
-        print('BN_________________')
+        # print('BN_________________')
         x = [self.mff[i](x[i]) for i in range(len(x))]
         x = torch.cat(x, dim=1)
-        print(x.shape)
+        # print(x.shape)
         x = self.downsample(x)
-        print(x.shape)
+        # print(x.shape)
         x = self.oce(x)
-        print(x.shape)
+        # print(x.shape)
         return x
 
 
@@ -898,7 +898,7 @@ class DeMambaVision(nn.Module):
             feature.append(x)
         print('----------------')
 
-        return feature
+        return feature[::-1]
 
 
     def forward(self, x: Tensor) -> List[Tensor]:

@@ -588,7 +588,7 @@ import sys
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
-    backbone = 'wres50'
+    backbone = 'mambavision-s'
     image_size = 224
     weight_inverse = True
 
