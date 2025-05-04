@@ -82,13 +82,20 @@ class Upsample(nn.Module):
             dim_out = dim
         else:
             dim_out = dim // 2
-        self.upsample = nn.Sequential(
+        self.upsample1 = nn.Sequential(
             nn.ConvTranspose2d(dim, dim_out, kernel_size=3, stride=2, padding=1, output_padding=1),
+            # LayerNorm(dim_out),
+        )
+        self.upsample2 = nn.Sequential(
+            nn.ConvTranspose2d(dim, dim_out, kernel_size=3, stride=2, padding=1),
             # LayerNorm(dim_out),
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        x = self.upsample(x)
+        if x.shape[2] % 2 != 0:
+            x = self.upsample1(x)
+        else:
+            x = self.upsample2(x)
         return x
 
 
