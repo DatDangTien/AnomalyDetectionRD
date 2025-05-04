@@ -92,7 +92,7 @@ class Upsample(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        if x.shape[2] % 2 != 0:
+        if x.shape[2] % 2 == 0:
             x = self.upsample1(x)
         else:
             x = self.upsample2(x)
