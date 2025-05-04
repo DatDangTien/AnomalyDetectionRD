@@ -710,7 +710,7 @@ class BN_layer(nn.Module):
         x = self.downsample(x)
         # print(x.shape)
         x = self.oce(x)
-        # print(x.shape)
+        print(x.shape)
         return x
 
 
