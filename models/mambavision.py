@@ -890,14 +890,15 @@ class DeMambaVision(nn.Module):
         Last layer has no downsample.
         """
         feature = []
-        print('----------------')
-        print(x.shape)
+        # print('----------------')
+        # print(x.shape)
         for level in self.levels[:3]:
             x = level(x)
-            print(x.shape)
+            # print(x.shape)
             feature.append(x)
-        print('----------------')
+        # print('----------------')
 
+        print([f.shape for f in feature[::-1]])
         return feature[::-1]
 
 
