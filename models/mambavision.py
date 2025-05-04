@@ -4,11 +4,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.hub import load_state_dict_from_url
 from models.convnext import DropPath, LayerNorm
+from models.convnext import Block as ConvNeXtBlock
 import math
 from functools import partial
 from einops import rearrange, repeat
 from mamba_ssm.ops.selective_scan_interface import selective_scan_fn
 from typing import Type, Any, List, Tuple
+
 
 
 model_urls = {
@@ -618,7 +620,7 @@ class MambaVision(nn.Module):
         # x = self.norm(x)
         # x = self.avgpool(x)
         # x = torch.flatten(x, 1)
-        # print([f.shape for f in feature])
+        print([f.shape for f in feature])
         return feature
 
 
@@ -667,28 +669,36 @@ class BN_layer(nn.Module):
 
         # C = 1024 * 3 -> 1024
         self.downsample = nn.Sequential(
-            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages), kernel_size=3, padding=1),
-            LayerNorm(dim * 2 ** num_stages, eps=norm_eps),
+            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages + 1), kernel_size=3, stride=2, padding=1),
+            LayerNorm(dim * 2 ** (num_stages + 1), eps=norm_eps),
         )
-        # dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
+        # self.oce = nn.Sequential(
+        #     *[MambaVisionLayer(
+        #         dim=int(dim * 2 ** num_stages),
+        #         depth=depths[-1],
+        #         num_heads=num_heads[-1],
+        #         window_size=window_size[-1],
+        #         mlp_ratio=mlp_ratio,
+        #         qkv_bias=qkv_bias,
+        #         qk_scale=qk_scale,
+        #         conv=False,
+        #         drop=drop_rate,
+        #         attn_drop=attn_drop_rate,
+        #         # drop_path=dpr[sum(depths[:i]):sum(depths[:i + 1])],
+        #         downsample=False,
+        #         layer_scale=layer_scale,
+        #         layer_scale_conv=layer_scale_conv,
+        #         transformer_blocks=list(range(math.ceil(depths[-1] / 2), depths[-1])),
+        #         ) for _ in range(depths[-1])]
+        # )
         self.oce = nn.Sequential(
-            *[MambaVisionLayer(
-                dim=int(dim * 2 ** num_stages),
-                depth=depths[-1],
-                num_heads=num_heads[-1],
-                window_size=window_size[-1],
-                mlp_ratio=mlp_ratio,
-                qkv_bias=qkv_bias,
-                qk_scale=qk_scale,
-                conv=False,
-                drop=drop_rate,
-                attn_drop=attn_drop_rate,
-                # drop_path=dpr[sum(depths[:i]):sum(depths[:i + 1])],
-                downsample=False,
-                layer_scale=layer_scale,
-                layer_scale_conv=layer_scale_conv,
-                transformer_blocks=list(range(math.ceil(depths[-1] / 2), depths[-1])),
-                ) for _ in range(depths[-1])]
+            *[ConvNeXtBlock(
+                dim=dim * 2 ** (num_stages + 1),
+                drop_path=dpr[i],
+                layer_scale_init_value=layer_scale_conv,
+                norm_eps=norm_eps,
+            ) for i in range (depths[-1])]
         )
 
     # Multiscale feature fusion
@@ -840,31 +850,33 @@ class DeMambaVision(nn.Module):
         super().__init__()
         print(depths)
         # Remove final stage
-        depths = depths[:-1]
-        num_heads = num_heads[:-1]
-        window_size = window_size[:-1]
+        # depths = depths[:-1]
+        # num_heads = num_heads[:-1]
+        # window_size = window_size[:-1]
         dpr = [x.item() for x in torch.linspace(drop_path_rate, 0, sum(depths))]
         self.levels = nn.ModuleList([])
-        for i in range(len(depths)):
+        for i in range(len(depths) - 1):
             conv = True if (i < 2) else False
-            level = DeMambaVisionLayer(dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
-                                     depth=depths[i],
-                                     num_heads=num_heads[i],
-                                     window_size=window_size[i],
-                                     mlp_ratio=mlp_ratio,
-                                     qkv_bias=qkv_bias,
-                                     qk_scale=qk_scale,
-                                     conv=conv,
-                                     drop=drop_rate,
-                                     attn_drop=attn_drop_rate,
-                                     # drop_path=dpr[sum(depths[:i+1])-1:sum(depths[:i])-1 : -1],
-                                     # drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])][::-1],
-                                     drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])],
-                                     upsample=(i>0),
-                                     layer_scale=layer_scale,
-                                     layer_scale_conv=layer_scale_conv,
-                                     transformer_blocks=list(range(math.ceil(depths[i] / 2),depths[i])),
-                                     )
+            level = DeMambaVisionLayer(
+                    # dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
+                    dim=int(dim * 2 ** (len(depths) - i)),
+                    depth=depths[i],
+                    num_heads=num_heads[i],
+                    window_size=window_size[i],
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=qkv_bias,
+                    qk_scale=qk_scale,
+                    conv=conv,
+                    drop=drop_rate,
+                    attn_drop=attn_drop_rate,
+                    # drop_path=dpr[sum(depths[:i+1])-1:sum(depths[:i])-1 : -1],
+                    # drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])][::-1],
+                    drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])],
+                    upsample=(i>0),
+                    layer_scale=layer_scale,
+                    layer_scale_conv=layer_scale_conv,
+                    transformer_blocks=list(range(math.ceil(depths[i] / 2),depths[i])),
+                    )
             self.levels.append(level)
         self.apply(self._init_weights)
 
@@ -900,7 +912,7 @@ class DeMambaVision(nn.Module):
             feature.append(x)
         # print('----------------')
 
-        # print([f.shape for f in feature[::-1]])
+        print([f.shape for f in feature[::-1]])
         return feature[::-1]
 
 
