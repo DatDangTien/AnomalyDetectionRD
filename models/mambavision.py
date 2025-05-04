@@ -696,7 +696,7 @@ class BN_layer(nn.Module):
             *[ConvNeXtBlock(
                 dim=dim * 2 ** (num_stages + 1),
                 drop_path=dpr[i],
-                layer_scale_init_value=layer_scale_conv,
+                layer_scale_init_value=0 if layer_scale_conv is None else layer_scale_conv,
                 norm_eps=norm_eps,
             ) for i in range (depths[-1])]
         )
