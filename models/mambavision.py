@@ -859,7 +859,7 @@ class DeMambaVision(nn.Module):
                                      conv=conv,
                                      drop=drop_rate,
                                      attn_drop=attn_drop_rate,
-                                     drop_path=dpr[sum(depths[:i+1]):sum(depths[:i])-1: -1],
+                                     drop_path=dpr[sum(depths[:i+1])-1:sum(depths[:i])-1 : -1],
                                      upsample=(i < 2),
                                      layer_scale=layer_scale,
                                      layer_scale_conv=layer_scale_conv,
