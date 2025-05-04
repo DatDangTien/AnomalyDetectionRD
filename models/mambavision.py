@@ -618,6 +618,7 @@ class MambaVision(nn.Module):
         # x = self.norm(x)
         # x = self.avgpool(x)
         # x = torch.flatten(x, 1)
+        print([f.shape for f in feature])
         return feature
 
 
@@ -777,6 +778,7 @@ class DeMambaVisionLayer(nn.Module):
 
 
     def forward(self, x: Tensor) -> Tensor:
+        x = self.upsample(x) if self.upsample is not None else x
         _, _, H, W = x.shape
 
         # Window transform
@@ -802,8 +804,6 @@ class DeMambaVisionLayer(nn.Module):
             x = window_reverse(x, self.window_size, Hp, Wp)
             if pad_r > 0 or pad_b > 0:
                 x = x[:, :, :H, :W].contiguous()
-        x = self.upsample(x) if self.upsample is not None else x
-        # print('Downsample:', x.shape)
         return x
 
 class DeMambaVision(nn.Module):
