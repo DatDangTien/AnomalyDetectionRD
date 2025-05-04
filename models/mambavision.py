@@ -448,6 +448,7 @@ class MambaVisionLayer(nn.Module):
             layer_scale_conv: conv layer scaling coefficient.
             transformer_blocks: list of transformer blocks.
         """
+        print(transformer_blocks)
         super().__init__()
         self.conv = conv
         self.transformer_block = False
@@ -686,8 +687,8 @@ class BN_layer(nn.Module):
                 downsample=False,
                 layer_scale=layer_scale,
                 layer_scale_conv=layer_scale_conv,
-                transformer_blocks=list(range(math.ceil(depths[i] / 2), depths[-1])),
-                ) for i in range(depths[-1])]
+                transformer_blocks=list(range(math.ceil(depths[-1] / 2), depths[-1])),
+                ) for _ in range(depths[-1])]
         )
 
     # Multiscale feature fusion
@@ -740,6 +741,7 @@ class DeMambaVisionLayer(nn.Module):
             layer_scale_conv: conv layer scaling coefficient.
             transformer_blocks: list of transformer blocks.
         """
+        print(transformer_blocks)
         super().__init__()
         print(drop_path)
         self.conv = conv
@@ -841,7 +843,7 @@ class DeMambaVision(nn.Module):
         depths = depths[:-1]
         num_heads = num_heads[:-1]
         window_size = window_size[:-1]
-        dpr = [x.item() for x in torch.linspace(drop_path_rate, 0, sum(depths))]
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
         self.levels = nn.ModuleList([])
         for i in range(len(depths) - 1, -1, -1):
             conv = True if (i < 2) else False
@@ -855,7 +857,7 @@ class DeMambaVision(nn.Module):
                                      conv=conv,
                                      drop=drop_rate,
                                      attn_drop=attn_drop_rate,
-                                     drop_path=dpr[sum(depths[:i]):sum(depths[:i + 1])],
+                                     drop_path=dpr[sum(depths[:len(depths) - i]):sum(depths[: len(depths) - i + 1])],
                                      upsample=(i < 2),
                                      layer_scale=layer_scale,
                                      layer_scale_conv=layer_scale_conv,
