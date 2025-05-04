@@ -275,7 +275,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
 
 backbone_module ={
     'wres50': (resnet.wide_resnet50_2, de_resnet.de_wide_resnet50_2),
-    'wres101': (de_resnet.wide_resnet101_2, de_resnet.de_wide_resnet101_2),
+    'wres101': (resnet.wide_resnet101_2, de_resnet.de_wide_resnet101_2),
     'resnet50': (resnet.wide_resnet50_2, de_resnet.de_wide_resnet50_2),
     'resnet101': (resnet.wide_resnet101_2, de_resnet.de_wide_resnet101_2),
     'convnext-t': (convnext.convnext_tiny, convnext.de_convnext_tiny),
