@@ -83,7 +83,7 @@ class Upsample(nn.Module):
         else:
             dim_out = dim // 2
         self.upsample = nn.Sequential(
-            nn.ConvTranspose2d(dim, dim_out, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(dim, dim_out, kernel_size=3, stride=2, padding=0, output_padding=1),
             # LayerNorm(dim_out),
         )
 
