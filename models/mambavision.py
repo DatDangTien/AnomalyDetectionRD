@@ -666,7 +666,7 @@ class BN_layer(nn.Module):
 
         # C = 1024 * 3 -> 1024
         self.downsample = nn.Sequential(
-            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages), kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages), kernel_size=3, padding=1),
             LayerNorm(dim * 2 ** num_stages, eps=norm_eps),
         )
         # dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
@@ -844,7 +844,6 @@ class DeMambaVision(nn.Module):
         dpr = [x.item() for x in torch.linspace(drop_path_rate, 0, sum(depths))]
         self.levels = nn.ModuleList([])
         for i in range(len(depths) - 1, -1, -1):
-            print(depths[i])
             conv = True if (i < 2) else False
             level = DeMambaVisionLayer(dim=int(dim * 2 ** (i+1)),
                                      depth=depths[i],
