@@ -892,7 +892,8 @@ class DeMambaVision(nn.Module):
         feature = []
         # print('----------------')
         # print(x.shape)
-        for level in self.levels[:3]:
+        feature.append(x)
+        for level in self.levels[:2]:
             x = level(x)
             # print(x.shape)
             feature.append(x)
