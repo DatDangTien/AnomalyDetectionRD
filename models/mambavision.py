@@ -839,6 +839,7 @@ class DeMambaVision(nn.Module):
             layer_scale_conv: conv layer scaling coefficient.
         """
         super().__init__()
+        print(depths)
         # Remove final stage
         depths = depths[:-1]
         num_heads = num_heads[:-1]
