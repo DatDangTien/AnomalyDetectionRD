@@ -89,7 +89,8 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
                timing=False):
     bn.eval()
     decoder.eval()
-    layer_attn.eval()
+    if layer_attn:
+        layer_attn.eval()
     gt_list_px = []
     pr_list_px = []
     gt_list_sp = []
@@ -115,7 +116,11 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
             img = img.to(device)
             inputs = encoder(img)
             outputs = decoder(bn(inputs))
-            anomaly_map, _ = cal_anomaly_map(inputs, outputs, layer_attn(),
+            if layer_attn:
+                anomaly_map, _ = cal_anomaly_map(inputs, outputs, layer_attn(),
+                                             out_size=img.shape[-1], amap_mode='a')
+            else:
+                anomaly_map, _ = cal_anomaly_map(inputs, outputs,
                                              out_size=img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             # # Morph
