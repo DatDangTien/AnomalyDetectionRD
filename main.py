@@ -279,8 +279,9 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                                                                             val_time - epoch_time,
                                                                                             time.time()-epoch_time))
 
-        for name, value in layer_attn.named_parameters():
-            print(f'{name}: {value.data}\n')
+        if use_layer_attn:
+            for name, value in layer_attn.named_parameters():
+                print(f'{name}: {value.data}\n')
 
         if (epoch + 1) % 20 == 0:
             # Inverse adap weight for evaluation
