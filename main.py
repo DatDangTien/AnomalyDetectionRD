@@ -67,7 +67,8 @@ def loss_concat(a, b):
 def validation(encoder, bn, decoder, layer_attn, val_dataloader, device):
     bn.eval()
     decoder.eval()
-    layer_attn.eval()
+    if layer_attn:
+        layer_attn.eval()
     with torch.no_grad():
         loss_list = []
         for img, _ in val_dataloader:
@@ -167,13 +168,14 @@ def train(dataset, _class_, filter=None, filter_name=None):
     encoder.eval()
     bn = bn.to(device)
     decoder = decoder.to(device)
-    layer_attn.to(device)
+    if use_layer_attn:
+        layer_attn.to(device)
 
     if torch.cuda.device_count() > 1:
         encoder = DP(encoder)
         bn = DP(bn)
         decoder = DP(decoder)
-        if layer_attn:
+        if use_layer_attn:
             layer_attn = DP(layer_attn)
 
     optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters())+list(layer_attn.parameters()),
