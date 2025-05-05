@@ -178,7 +178,11 @@ def train(dataset, _class_, filter=None, filter_name=None):
         if use_layer_attn:
             layer_attn = DP(layer_attn)
 
-    optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters())+list(layer_attn.parameters()),
+    if use_layer_attn:
+        optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters())+list(layer_attn.parameters()),
+                                 lr=learning_rate, betas=optimizer_momentum)
+    else:
+        optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters()),
                                  lr=learning_rate, betas=optimizer_momentum)
 
     print(count_parameters(decoder), 'decoder params')
