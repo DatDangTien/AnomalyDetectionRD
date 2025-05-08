@@ -13,7 +13,6 @@ from dataset import MVTecDataset, GFCDataset, train_collate
 import torch.backends.cudnn as cudnn
 from test import evaluation
 from torch.nn import functional as F
-import sys
 import pickle as pkl
 import time
 from argparse import ArgumentParser
@@ -263,11 +262,6 @@ def train(dataset, _class_, filter=None, filter_name=None):
 
         if early_stop_delay == 1:
             print('Early stop!')
-            break
-
-        # Debug: early stop end other categories.
-        if True:
-            print(_class_, ': Test early')
             break
 
         if early_stop_delay > 0:

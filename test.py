@@ -21,6 +21,7 @@ import pickle
 import os
 import shutil
 import time
+from argparse import ArgumentParser
 
 def format_state_dict(state_dicts):
     for module, state_dict in state_dicts.items():
@@ -212,7 +213,7 @@ def test(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3, trainable=True, inverse=weight_inverse)
+    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -229,8 +230,8 @@ def test(dataset, _class_):
     bn.load_state_dict(ckp['bn'])
     if 'layer_attn' in ckp:
         layer_attn.load_state_dict(ckp['layer_attn'])
-    else:
-        layer_attn.set_trainable(False)
+    if use_layer_attn:
+        layer_attn.set_trainable(True)
 
     # Print layer weight
     for k, v in layer_attn.named_parameters():
@@ -291,7 +292,7 @@ def visualize(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3, trainable=True, inverse=weight_inverse)
+    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -306,8 +307,8 @@ def visualize(dataset, _class_):
     bn.load_state_dict(ckp['bn'])
     if 'layer_attn' in ckp:
         layer_attn.load_state_dict(ckp['layer_attn'])
-    else:
-        layer_attn.set_trainable(False)
+    if use_layer_attn:
+        layer_attn.set_trainable(True)
 
     # print(encoder)
     # print(bn)
@@ -576,6 +577,18 @@ def compute_pro(masks: ndarray, amaps: ndarray, num_th: int = 200) -> None:
 #         auroc_sp_mean = round(roc_auc_score(gt_list_sp, prmean_list_sp), 4)
 #     return auroc_sp_max, auroc_sp_mean
 
+def Parser():
+    parser = ArgumentParser(description="Train RD4AD model")
+    parser.add_argument('-f', '--func', type=str, default='test',
+                        choices=['test', 'visualize', 'visualize_loss'], help='Function to run')
+    parser.add_argument('-is', '--image_size', type=int, default=224, help='Image resolution')
+    parser.add_argument('-be', '--backbone', type=str, default='wres50', help='Backbone model name')
+    parser.add_argument('-d', '--dataset', type=str, default='mvtec', help='Dataset name')
+    parser.add_argument('-c', '--dclass', type=str, default='', help='Data class.')
+    parser.add_argument('-w', '--layer_weights', type=int, default=0,
+                        choices=[0,1,2], help='Layer weights flag, 0: no weights, 1: adaptive weight, 2: inverse adaptive weight')
+    return parser.parse_args()
+
 backbone_module ={
     'wres50': (resnet.wide_resnet50_2, de_resnet.de_wide_resnet50_2),
     'wres101': (resnet.wide_resnet101_2, de_resnet.de_wide_resnet101_2),
@@ -593,28 +606,29 @@ backbone_module ={
 backbones = ['resnet50', 'resnet101', 'wres50', 'wres101',
              'convnext-t', 'convnext-s', 'convnext-b', 'convnext-l',
              'mambavision-t', 'mambavision-s', 'mambavision-b', 'mambavision-l']
-import sys
 if __name__ == '__main__':
+    args = Parser()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
-    backbone = 'mambavision-s'
-    image_size = 224
-    weight_inverse = True
+    backbone = args.backbone
+    image_size = args.image_size
+    weight_inverse = (args.layer_weights == 2)
+    use_layer_attn = (args.layer_weights > 0)
 
     item_list = []
     res_path = ''
-    if sys.argv[2] == 'mvtec':
-        if len(sys.argv) > 3:
-            item_list = [sys.argv[3]]
+    if args.dataset == 'mvtec':
+        if args.dclass != '':
+            item_list = [args.dclass]
         else:
             item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
                          'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
         res_path = f'./result/mvtec/'
-    elif sys.argv[2] == 'gfc':
+    elif args.dataset == 'gfc':
         item_list = ['gfc']
         res_path = f'./result/gfc/'
 
-    if sys.argv[1] == 'test':
+    if args.func == 'test':
         if not os.path.isdir(res_path):
             os.makedirs(res_path)
         res_path += 'benchmark.txt'
@@ -625,7 +639,7 @@ if __name__ == '__main__':
             f.write(str(image_size) + '\n')
             f.write('\tAUROC_AL, AUROC_AD, PRO, AP_AL, AP_AD, Overkill, Underkill\n')
             for i in item_list:
-                res_class = globals()[sys.argv[1]](sys.argv[2], i)
+                res_class = globals()[args.func](args.dataset, i)
                 res_list.append(res_class)
                 f.write(i + ' ' + ' '.join([str(me_num) for me_num in res_class]) + '\n')
             res_avr = [0] * len(res_class)
@@ -636,10 +650,9 @@ if __name__ == '__main__':
             res_avr = [str(round(res_me / len(item_list), 3)) for res_me in res_avr]
             if len(item_list) > 1:
                 f.write('Avr {}\n'.format(' '.join(res_avr)))
-    # elif sys.argv[1] == 'visualize':
     else:
         for i in item_list:
-            globals()[sys.argv[1]](sys.argv[2], i)
+            globals()[args.func](args.dataset, i)
 
 
 

@@ -6,7 +6,7 @@ class AdaptiveStages(nn.Module):
     def __init__(self,
                  num_stages=4,
                  w_init: float = 1.0,
-                 trainable:bool = True,
+                 trainable:bool = False,
                  scale: bool = True,
                  inverse: bool = False,):
         super().__init__()
