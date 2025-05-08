@@ -269,6 +269,10 @@ def train(dataset, _class_, filter=None, filter_name=None):
             print('Early stop!')
             break
 
+        if True:
+            print('Test early')
+            break
+
         if early_stop_delay > 0:
             early_stop_delay -= 1
 
