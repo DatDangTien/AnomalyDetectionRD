@@ -116,11 +116,7 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
             img = img.to(device)
             inputs = encoder(img)
             outputs = decoder(bn(inputs))
-            if layer_attn:
-                anomaly_map, _ = cal_anomaly_map(inputs, outputs, layer_attn(),
-                                             out_size=img.shape[-1], amap_mode='a')
-            else:
-                anomaly_map, _ = cal_anomaly_map(inputs, outputs,
+            anomaly_map, _ = cal_anomaly_map(inputs, outputs, layer_attn,
                                              out_size=img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             # # Morph
@@ -216,7 +212,7 @@ def test(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
+    layer_attn = AdaptiveStages(num_stages=3, trainable=True, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -231,7 +227,12 @@ def test(dataset, _class_):
             ckp['bn'].pop(k)
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
-    layer_attn.load_state_dict(ckp['layer_attn'])
+    if 'layer_attn' in ckp:
+        layer_attn.load_state_dict(ckp['layer_attn'])
+    else:
+        layer_attn.set_trainable(False)
+
+    # Print layer weight
     for k, v in layer_attn.named_parameters():
         print(f'{k}: {v}')
     print(layer_attn.get_weight())
@@ -290,7 +291,7 @@ def visualize(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
+    layer_attn = AdaptiveStages(num_stages=3, trainable=True, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -303,7 +304,10 @@ def visualize(dataset, _class_):
             ckp['bn'].pop(k)
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
-    layer_attn.load_state_dict(ckp['layer_attn'])
+    if 'layer_attn' in ckp:
+        layer_attn.load_state_dict(ckp['layer_attn'])
+    else:
+        layer_attn.set_trainable(False)
 
     # print(encoder)
     # print(bn)
@@ -328,7 +332,7 @@ def visualize(dataset, _class_):
             # print(len(outputs))
             # print('================')
 
-            anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, layer_attn(),
+            anomaly_map, amp_list = cal_anomaly_map(inputs, outputs, layer_attn,
                                                     out_size=img.shape[-1], amap_mode='a')
             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
             # Morph

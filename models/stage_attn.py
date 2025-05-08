@@ -6,20 +6,26 @@ class AdaptiveStages(nn.Module):
     def __init__(self,
                  num_stages=4,
                  w_init: float = 1.0,
+                 trainable:bool = True,
                  scale: bool = True,
                  inverse: bool = False,):
         super().__init__()
         self.num_stages = num_stages
+        self.trainable = trainable
         self.scale = scale
         self.inverse = inverse
         self.weight = nn.Parameter(torch.full((num_stages,), w_init))
 
     def forward(self) -> torch.Tensor:
+        # If not trainable, return no grad weight.
+        w = self.weight
+        if not self.trainable:
+            with torch.no_grad():
+                w = torch.ones_like(self.weight)
         # Inverse
         if self.inverse:
-            w = 1.0 / (self.weight + 1e-8)
-        else:
-            w = self.weight
+            w = 1.0 / (w + 1e-8)
+
         # Normalize
         w = w.softmax(dim=0)
         # Scale
@@ -41,17 +47,21 @@ class AdaptiveStages(nn.Module):
     def set_inverse(self) -> None:
         self.inverse = not self.inverse
 
+    def set_trainable(self, state: bool) -> None:
+        self.trainable = state
 
 
 
-def adap_loss_function(a, b, w=None,
+def adap_loss_function(a, b, w_module=None,
                        loss_type='cosine',
                        w_entropy=0.01,
                        device='cpu'):
     cos_loss = torch.nn.CosineSimilarity()
 
-    if w is None:
+    if w_module is None:
         w = torch.ones(len(a)).float()
+    else:
+        w = w_module()
 
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
@@ -67,9 +77,11 @@ def adap_loss_function(a, b, w=None,
     return loss + w_entropy * penalty
 
 
-def cal_anomaly_map(a,b, w=None, out_size=224, amap_mode='mul'):
-    if w is None:
+def cal_anomaly_map(a,b, w_module=None, out_size=224, amap_mode='mul'):
+    if w_module is None:
         w = torch.ones(len(a))
+    else:
+        w = w_module()
 
     if amap_mode == 'mul':
         anomaly_map = np.ones([out_size, out_size])
