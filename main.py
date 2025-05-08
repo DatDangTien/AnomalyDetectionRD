@@ -212,8 +212,27 @@ def train(dataset, _class_, filter=None, filter_name=None):
         loss_dict['train'][epoch] = np.mean(loss_list)
         loss_dict['val'][epoch] = validation(encoder, bn, decoder, layer_attn, val_dataloader, device)
 
+        print('epoch [{}/{}]: loss:{:.4f}, Train time: {:.5f}s, Epoch time: {:.5f}s'.format(epoch + 1,
+                                                                                            epochs,
+                                                                                            loss_dict['train'][epoch],
+                                                                                            val_time - epoch_time,
+                                                                                            time.time()-epoch_time))
+
         if use_layer_attn:
-            if epoch == epochs - fusion_epochs:
+            for name, value in layer_attn.named_parameters():
+                print(f'{name}: {value.data}\n')
+
+        if (epoch + 1) % 20 == 0:
+            # Inverse adap weight for evaluation
+            layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
+            eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
+            # Inverse back for training
+            layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
+            print('AUROC_AL: {}, AUROC_AD: {}, PRO: {}'.format(*eva[:3]))
+
+
+        if use_layer_attn:
+            if epoch + 1 == epochs - fusion_epochs:
                 freeze_layer_attn = False
                 print('Unfreeze layer_attn')
                 layer_attn.module.unfreeze() if isinstance(layer_attn,DP) else layer_attn.unfreeze()
@@ -255,23 +274,6 @@ def train(dataset, _class_, filter=None, filter_name=None):
             early_stop_delay -= 1
 
 
-        print('epoch [{}/{}]: loss:{:.4f}, Train time: {:.5f}s, Epoch time: {:.5f}s'.format(epoch + 1,
-                                                                                            epochs,
-                                                                                            loss_dict['train'][epoch],
-                                                                                            val_time - epoch_time,
-                                                                                            time.time()-epoch_time))
-
-        if use_layer_attn:
-            for name, value in layer_attn.named_parameters():
-                print(f'{name}: {value.data}\n')
-
-        if (epoch + 1) % 20 == 0:
-            # Inverse adap weight for evaluation
-            layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
-            eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
-            # Inverse back for training
-            layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
-            print('AUROC_AL: {}, AUROC_AD: {}, PRO: {}'.format(*eva[:3]))
 
         #
         # with open(train_log_path, 'a') as f:
