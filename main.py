@@ -1,8 +1,3 @@
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
 import torch
 from torch.nn import DataParallel as DP
 import numpy as np
@@ -21,6 +16,7 @@ from torch.nn import functional as F
 import sys
 import pickle as pkl
 import time
+from argparse import ArgumentParser
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -288,6 +284,23 @@ def train(dataset, _class_, filter=None, filter_name=None):
         pkl.dump(loss_dict, f)
     return eva
 
+def Parser():
+    parser = ArgumentParser(description="Train RD4AD model")
+    parser.add_argument('-is', '--image_size', type=int, default=224, help='Image resolution')
+    parser.add_argument('-be', '--backbone', type=str, default='wres50', help='Backbone model name')
+    parser.add_argument('-d', '--dataset', type=str, default='mvtec', help='Dataset name')
+    parser.add_argument('-c', '--dclass', type=str, default='', help='Data class.')
+    parser.add_argument('-w', '--layer_weights', type=int, default=0,
+                        choices=[0,1,2], help='Layer weights flag, 0: no weights, 1: adaptive weight, 2: inverse adaptive weight')
+    parser.add_argument('-s', '--seed', type=int, default=111, help='Seed number')
+    parser.add_argument('-e', '--epochs', type=int, default=200, help='Number of train epochs')
+    parser.add_argument('-fe', '--fusion_epochs', type=int, default=20, help='Number of fusion epochs')
+    parser.add_argument('-bh', '--batch', type=int, default=16, help='Batch size')
+    parser.add_argument('-lr', '--learning_rate', type=float, default=5e-3, help='Learning rate')
+    parser.add_argument('-pa', '--patience', type=int, default=20, help='Early stop patience')
+    return parser.parse_args()
+
+
 backbone_module ={
     'wres50': (resnet.wide_resnet50_2, de_resnet.de_wide_resnet50_2),
     'wres101': (resnet.wide_resnet101_2, de_resnet.de_wide_resnet101_2),
@@ -308,44 +321,45 @@ if __name__ == '__main__':
                  'convnext-t', 'convnext-s', 'convnext-b', 'convnext-l',
                  'mambavision-t', 'mambavision-s', 'mambavision-b', 'mambavision-l']
 
-    SEED = 111
+    args = Parser()
+
+    SEED = args.seed
     setup_seed(SEED)
 
-    image_size = 224
-    epochs = 200
-    # epochs = 40
-    fusion_epochs = 20
-    weight_inverse = True
+    image_size = args.image_size
+    epochs = args.epochs
+    fusion_epochs = args.fusion_epochs
+    use_layer_attn = (args.layer_weights > 0)
+    weight_inverse = (args.layer_weights == 2)
     layer_entropy = 0.04
-    learning_rate = 5e-3
+    learning_rate = args.learning_rate
     optimizer_momentum = (0.5, 0.999)
-    batch_size = 16
-    # batch_size = 8
-    backbone = 'mambavision-s'
+    batch_size = args.batch
+    backbone = args.backbone
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 
-    patience = 20
+    patience = args.patience
 
     item_list = []
-    # python main.py mambavision-s 0 gfc
-    if sys.argv[1] in backbones:
-        backbone = sys.argv[1]
-    use_layer_attn = False if sys.argv[2] == '0' else True
 
-    if sys.argv[3] == 'mvtec':
-        if len(sys.argv) > 5:
-            item_list = [sys.argv[4]]
+    if args.dataset == 'mvtec':
+        if args.dclass != '':
+            item_list = [args.dclass]
         else:
             item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
                          'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
     else:
+        # gfc dataset only 1 class
         item_list = ['gfc']
+
+    for i in item_list:
+        train(args.dataset, i)
 
     # filter_list = [BilateralFilter(d=5), WaveletFilter()]
     # filter_name_list = ['bilateral', 'wavelet']
-    for i in item_list:
-        train(sys.argv[3], i)
+    # for i in item_list:
+    #     train(sys.argv[3], i)
         # for j in range(len(filter_list)):
         #     train(sys.argv[1], i, filter_list[j], filter_name_list[j])
 
