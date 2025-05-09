@@ -100,7 +100,7 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
     aupro_list = []
     auroc_px = None
     auroc_sp = None
-    aupro_sp = None
+    aupro_px = None
     ap_px = None
     ap_sp = None
     overkill = None
@@ -157,7 +157,7 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
 
         if len(aupro_list) > 0:
             auroc_px  = round(roc_auc_score(gt_list_px, pr_list_px), 3)
-            aupro_sp = round(np.mean(aupro_list), 3)
+            aupro_px = round(np.mean(aupro_list), 3)
             ap_px = round(average_precision_score(gt_list_px, pr_list_px), 3)
 
         auroc_sp = round(roc_auc_score(gt_list_sp, pr_list_sp), 3)
@@ -178,7 +178,8 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
         if hist:
             visualize_hist_scores(pr_list_sp, gt_list_sp, hist)
 
-    return auroc_px, auroc_sp, aupro_sp, ap_px, ap_sp, overkill, underkill
+    # return auroc_px, auroc_sp, aupro_sp, ap_px, ap_sp, overkill, underkill
+    return auroc_sp, ap_sp, auroc_px, aupro_px, ap_px, overkill, underkill
 
 def test(dataset, _class_):
     print(_class_)
@@ -225,7 +226,7 @@ def test(dataset, _class_):
     bn = bn.to(device)
     decoder = decoder.to(device)
     layer_attn = layer_attn.to(device)
-    ckp = torch.load(ckp_path, map_location=device)
+    ckp = torch.load(ckp_path, map_location=device, weights_only=True)
     ckp = format_state_dict(ckp)    # Stripe module. prefix by DataParallel
     # print(ckp.keys())
 
@@ -304,7 +305,7 @@ def visualize(dataset, _class_):
     bn = bn.to(device)
     decoder = decoder.to(device)
     layer_attn = layer_attn.to(device)
-    ckp = torch.load(ckp_path, map_location=device)
+    ckp = torch.load(ckp_path, map_location=device, weights_only=True)
     ckp = format_state_dict(ckp)    # Stripe module. prefix by DataParallel
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:
@@ -643,7 +644,7 @@ if __name__ == '__main__':
             f.write('----------------------------\n')
             f.write(backbone + '\n')
             f.write(str(image_size) + '\n')
-            f.write('\tAUROC_AL, AUROC_AD, PRO, AP_AL, AP_AD, Overkill, Underkill\n')
+            f.write('\tAUROC_AD, AP_AD, AUROC_AL, PRO, AP_AL, Overkill, Underkill\n')
             for i in item_list:
                 res_class = globals()[args.func](args.dataset, i)
                 res_list.append(res_class)
