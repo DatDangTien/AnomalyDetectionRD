@@ -760,7 +760,6 @@ class DeMambaVisionLayer(nn.Module):
             transformer_blocks: list of transformer blocks.
         """
         super().__init__()
-        print(dim)
         self.upsample = Upsample(dim=dim) if upsample else None
         dim = dim // 2 if upsample else dim
         self.conv = conv

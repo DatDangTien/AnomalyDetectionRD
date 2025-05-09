@@ -212,16 +212,16 @@ def train(dataset, _class_, filter=None, filter_name=None):
         loss_dict['train'][epoch] = np.mean(loss_list)
         loss_dict['val'][epoch] = validation(encoder, bn, decoder, layer_attn, val_dataloader, device)
 
-        print('epoch [{}/{}]: loss:{:.4f}, Train time: {:.5f}s, Epoch time: {:.5f}s'.format(epoch + 1,
-                                                                                            epochs,
-                                                                                            loss_dict['train'][epoch],
-                                                                                            val_time - epoch_time,
-                                                                                            time.time()-epoch_time))
         # print
         if epoch == 0 and print_shape:
             print('Encoder: ', [f'{t.shape}, ' for t in inputs])
             print('Bottleneck: ', embed.shape)
             print('Decoder: ', [f'{t.shape}, ' for t in outputs])
+        print('epoch [{}/{}]: loss:{:.4f}, Train time: {:.5f}s, Epoch time: {:.5f}s'.format(epoch + 1,
+                                                                                            epochs,
+                                                                                            loss_dict['train'][epoch],
+                                                                                            val_time - epoch_time,
+                                                                                            time.time()-epoch_time))
 
         if use_layer_attn:
             for name, value in layer_attn.named_parameters():
