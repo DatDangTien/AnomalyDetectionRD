@@ -60,7 +60,7 @@ def visualize_loss(dataset, _class_):
     plt.legend()
     plt.show()
 
-def visualize_hist_scores(predict, label):
+def visualize_hist_scores(predict, label, path):
     """
     Plot histogram of anomaly scores over dataset.
 
@@ -83,11 +83,11 @@ def visualize_hist_scores(predict, label):
     plt.ylabel("")
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    # plt.show()
+    plt.savefig(path)
 
 def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
-               _class_=None, predict=None, hist=False,
-               timing=False):
+               _class_=None, predict=None, hist=None, timing=False):
     bn.eval()
     decoder.eval()
     if layer_attn:
@@ -175,7 +175,7 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
                     f.write('{}, {} {}\n'.format(i, pr_list[i], round(pr_list_sp[i], 3)))
 
         if hist:
-            visualize_hist_scores(pr_list_sp, gt_list_sp)
+            visualize_hist_scores(pr_list_sp, gt_list_sp, hist)
 
     return auroc_px, auroc_sp, aupro_sp, ap_px, ap_sp, overkill, underkill
 
@@ -192,6 +192,11 @@ def test(dataset, _class_):
     if not os.path.isdir(predict_path):
         os.makedirs(predict_path)
     predict_path += _class_ + '_predict.txt'
+
+    hist_path = f'./result/{dataset}/{backbone}/hist/'
+    if not os.path.isdir(hist_path):
+        os.makedirs(hist_path)
+    hist_path += '{_class_}.png'
 
     # # Load preprocess metadata
     # try:
@@ -239,7 +244,7 @@ def test(dataset, _class_):
     print(layer_attn.get_weight())
 
     result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn,
-                                _class_,predict_path, hist=True, timing=True)
+                                _class_,predict_path, hist=hist_path, timing=True)
     print(f'{_class_}: ' + ' '.join([str(me_num) for me_num in result_metrics]))
     return result_metrics
 
