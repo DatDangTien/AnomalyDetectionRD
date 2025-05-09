@@ -648,7 +648,7 @@ if __name__ == '__main__':
             for i in item_list:
                 res_class = globals()[args.func](args.dataset, i)
                 res_list.append(res_class)
-                f.write(i + ' ' + ' '.join([str(me_num) for me_num in res_class]) + '\n')
+                f.write(i.capitalize() + ' ' + ' '.join([str(me_num) for me_num in res_class]) + '\n')
             res_avr = [0] * len(res_class)
             for cl in res_list:
                 for ind, me in enumerate(cl):
