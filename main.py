@@ -300,7 +300,7 @@ def Parser():
     parser.add_argument('-bs', '--batch_size', type=int, default=16, help='Batch size')
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-3, help='Learning rate')
     parser.add_argument('-pa', '--patience', type=int, default=20, help='Early stop patience')
-    parser.add_argument('p', '--print_shape', type=bool, default=False, help='Print shape of each module')
+    parser.add_argument('-p', '--print_shape', type=bool, default=False, help='Print shape of each module')
     return parser.parse_args()
 
 
