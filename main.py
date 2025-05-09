@@ -200,7 +200,8 @@ def train(dataset, _class_, filter=None, filter_name=None):
         for img, _ in train_dataloader:
             img = img.to(device)
             inputs = encoder(img)
-            outputs = decoder(bn(inputs))#bn(inputs))
+            embed = bn(inputs)
+            outputs = decoder(embed)
             # loss = loss_function(inputs, outputs)
             loss = adap_loss_function(inputs, outputs, layer_attn, w_entropy=layer_entropy, device=device)
             optimizer.zero_grad()
@@ -216,6 +217,11 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                                                                             loss_dict['train'][epoch],
                                                                                             val_time - epoch_time,
                                                                                             time.time()-epoch_time))
+        # print
+        if epoch == 0 and print_shape:
+            print('Encoder: ', [f'{t.shape}, ' for t in inputs])
+            print('Bottleneck: ', embed.shape)
+            print('Decoder: ', [f'{t.shape}, ' for t in outputs])
 
         if use_layer_attn:
             for name, value in layer_attn.named_parameters():
@@ -291,9 +297,10 @@ def Parser():
     parser.add_argument('-s', '--seed', type=int, default=111, help='Seed number')
     parser.add_argument('-e', '--epochs', type=int, default=200, help='Number of train epochs')
     parser.add_argument('-fe', '--fusion_epochs', type=int, default=20, help='Number of fusion epochs')
-    parser.add_argument('-bh', '--batch', type=int, default=16, help='Batch size')
+    parser.add_argument('-bs', '--batch_size', type=int, default=16, help='Batch size')
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-3, help='Learning rate')
     parser.add_argument('-pa', '--patience', type=int, default=20, help='Early stop patience')
+    parser.add_argument('p', '--print_shape', type=bool, default=False, help='Print shape of each module')
     return parser.parse_args()
 
 
@@ -330,12 +337,14 @@ if __name__ == '__main__':
     layer_entropy = 0.04
     learning_rate = args.learning_rate
     optimizer_momentum = (0.5, 0.999)
-    batch_size = args.batch
+    batch_size = args.batch_size
     backbone = args.backbone
+    patience = args.patience
+    print_shape = args.print_shape
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
 
-    patience = args.patience
 
     item_list = []
 
