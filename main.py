@@ -139,13 +139,17 @@ def train(dataset, _class_, filter=None, filter_name=None):
     #     pkl.dump(mean_std, f)
 
     # Split train val
-    train_len = int(len(train_data) * 0.8)
-    train_data, val_data = random_split(train_data, [train_len, len(train_data) - train_len],
-                                        generator=torch.Generator().manual_seed(SEED))
+    if patience > 0:
+        train_len = int(len(train_data) * 0.8)
+        train_data, val_data = random_split(train_data, [train_len, len(train_data) - train_len],
+                                            generator=torch.Generator().manual_seed(SEED))
     train_dataloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True,
                                                    collate_fn=train_collate, num_workers=4)
-    val_dataloader = torch.utils.data.DataLoader(val_data, batch_size=batch_size, shuffle=True,
-                                                 collate_fn=train_collate, num_workers=4)
+    if patience > 0:
+        val_dataloader = torch.utils.data.DataLoader(val_data, batch_size=batch_size, shuffle=True,
+                                                     collate_fn=train_collate, num_workers=4)
+    else:
+        val_dataloader = None
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
 
@@ -210,14 +214,15 @@ def train(dataset, _class_, filter=None, filter_name=None):
             loss_list.append(loss.item())
         val_time = time.time()
         loss_dict['train'][epoch] = np.mean(loss_list)
-        loss_dict['val'][epoch] = validation(encoder, bn, decoder, layer_attn, val_dataloader, device)
+        if val_dataloader:
+            loss_dict['val'][epoch] = validation(encoder, bn, decoder, layer_attn, val_dataloader, device)
 
         # print
         if epoch == 0 and print_shape:
             print('Encoder: ', [f'{t.shape}, ' for t in inputs])
             print('Bottleneck: ', embed.shape)
             print('Decoder: ', [f'{t.shape}, ' for t in outputs])
-        print('epoch [{}/{}]: loss:{:.4f}, Train time: {:.5f}s, Epoch time: {:.5f}s'.format(epoch + 1,
+        print('epoch [{}/{}]: loss:{:.4f}, Train time: {:.5f}s, Epoch time: {:.5f}s'.format(epoch+1,
                                                                                             epochs,
                                                                                             loss_dict['train'][epoch],
                                                                                             val_time - epoch_time,
@@ -227,13 +232,17 @@ def train(dataset, _class_, filter=None, filter_name=None):
             for name, value in layer_attn.named_parameters():
                 print(f'{name}: {value.data}\n')
 
-        if (epoch + 1) % 20 == 0:
+        if (epoch + 1) % 10 == 0:
             # Inverse adap weight for evaluation
             layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
             eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
             # Inverse back for training
             layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
             print('AUROC_AL: {}, AUROC_AD: {}, PRO: {}'.format(*eva[:3]))
+            if patience == 0:
+                torch.save({'bn': bn.state_dict(),
+                            'decoder': decoder.state_dict(),
+                            'layer_attn': layer_attn.state_dict()}, ckp_path)
 
 
         if use_layer_attn:
@@ -242,36 +251,37 @@ def train(dataset, _class_, filter=None, filter_name=None):
                 print('Unfreeze layer_attn')
                 layer_attn.module.unfreeze() if isinstance(layer_attn,DP) else layer_attn.unfreeze()
 
-        if loss_dict['val'][epoch] < best_val_loss:
-            print(f'Best epoch: {epoch}')
-            best_val_loss = loss_dict['val'][epoch]
-            patience_counter = 0
-            torch.save({'bn': bn.state_dict(),
-                        'decoder': decoder.state_dict(),
-                        'layer_attn': layer_attn.state_dict()}, ckp_path)
-        else:
-            patience_counter += 1
-            # Out of patience -> start layer_attn unfreeze
-            if patience_counter >= patience:
-                if use_layer_attn:
-                    if freeze_layer_attn:
-                        freeze_layer_attn = False
-                        early_stop_delay = fusion_epochs
-                        print('Unfreeze layer_attn')
-                        layer_attn.module.unfreeze() if isinstance(layer_attn, DP) else layer_attn.unfreeze()
+        if patience > 0:
+            if loss_dict['val'][epoch] < best_val_loss:
+                print(f'Best epoch: {epoch + 1}')
+                best_val_loss = loss_dict['val'][epoch]
+                patience_counter = 0
+                torch.save({'bn': bn.state_dict(),
+                            'decoder': decoder.state_dict(),
+                            'layer_attn': layer_attn.state_dict()}, ckp_path)
+            else:
+                patience_counter += 1
+                # Out of patience -> start layer_attn unfreeze
+                if patience_counter >= patience:
+                    if use_layer_attn:
+                        if freeze_layer_attn:
+                            freeze_layer_attn = False
+                            early_stop_delay = fusion_epochs
+                            print('Unfreeze layer_attn')
+                            layer_attn.module.unfreeze() if isinstance(layer_attn, DP) else layer_attn.unfreeze()
+                        else:
+                            # Layer Attn 20 epochs fixed.
+                            continue
                     else:
-                        # Layer Attn 20 epochs fixed.
-                        continue
-                else:
-                    print('Early stop!')
-                    break
+                        print('Early stop!')
+                        break
 
-        if early_stop_delay == 1:
-            print('Early stop!')
-            break
+            if early_stop_delay == 1:
+                print('Early stop!')
+                break
 
-        if early_stop_delay > 0:
-            early_stop_delay -= 1
+            if early_stop_delay > 0:
+                early_stop_delay -= 1
 
 
 
@@ -299,7 +309,7 @@ def Parser():
     parser.add_argument('-fe', '--fusion_epochs', type=int, default=20, help='Number of fusion epochs')
     parser.add_argument('-bs', '--batch_size', type=int, default=16, help='Batch size')
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-3, help='Learning rate')
-    parser.add_argument('-pa', '--patience', type=int, default=20, help='Early stop patience')
+    parser.add_argument('-pa', '--patience', type=int, default=0, help='Early stop patience')
     parser.add_argument('-p', '--print_shape', type=bool, default=False, help='Print shape of each module')
     return parser.parse_args()
 

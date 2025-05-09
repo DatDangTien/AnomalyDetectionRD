@@ -55,7 +55,8 @@ def visualize_loss(dataset, _class_):
     loss = pickle.load(open(train_log_path, 'rb'))
     epochs = range(1, len(loss['train'].keys()) + 1)
     plt.plot(epochs, loss['train'].values(), label='train loss')
-    plt.plot(epochs, loss['val'].values(), label='val loss')
+    if 'val' in loss:
+        plt.plot(epochs, loss['val'].values(), label='val loss')
     plt.xticks(np.arange(0, len(loss['train'].keys()) + 1, 10))
     plt.legend()
     plt.show()
