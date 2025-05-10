@@ -155,8 +155,9 @@ def _convnext(arch: str,
               pretrained: bool = False,
               progress: bool = True,
               depths: List[int] = [3, 3, 9, 3],
+              num_classes: int = 1000,
               **kwargs) -> ConvNeXt:
-    model = ConvNeXt(depths=depths, **kwargs)
+    model = ConvNeXt(depths=depths, num_classes=num_classes, **kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls[arch], progress=progress)
         model.load_state_dict(state_dict["model"])
@@ -276,7 +277,8 @@ def convnext_tiny(pretrained: bool = False,
     kwargs['dims'] = [96, 192, 384, 768]
     kwargs['drop_path_rate'] = 0.1
     kwargs['num_states'] = 3
-    return _convnext('convnext_t_22k', pretrained, progress, **kwargs), BN_layer(Block, **kwargs)
+
+    return _convnext('convnext_t_22k', pretrained, progress, depths, 21841, **kwargs), BN_layer(Block, **kwargs)
 
 
 def convnext_small(pretrained: bool = False,
@@ -288,7 +290,7 @@ def convnext_small(pretrained: bool = False,
     kwargs['dims'] = [96, 192, 384, 768]
     kwargs['drop_path_rate'] = 0.4
     kwargs['num_states'] = 3
-    return _convnext('convnext_s_22k', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
+    return _convnext('convnext_s_22k', pretrained, progress, depths, 21841, **kwargs), BN_layer(Block, **kwargs)
 
 
 def convnext_base(pretrained: bool = False,
@@ -300,7 +302,7 @@ def convnext_base(pretrained: bool = False,
     kwargs['dims'] = [128, 256, 512, 1024]
     kwargs['drop_path_rate'] = 0.5
     kwargs['num_states'] = 3
-    return _convnext('convnext_b_22k', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
+    return _convnext('convnext_b_22k', pretrained, progress, depths, 21841, **kwargs), BN_layer(Block, **kwargs)
 
 
 def convnext_large(pretrained: bool = False,
@@ -312,7 +314,7 @@ def convnext_large(pretrained: bool = False,
     kwargs['dims'] = [192, 384, 768, 1536]
     kwargs['drop_path_rate'] = 0.5
     kwargs['num_states'] = 3
-    return _convnext('convnext_l_22k', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
+    return _convnext('convnext_l_22k', pretrained, progress, depths, 21841, **kwargs), BN_layer(Block, **kwargs)
 
 
 def de_convnext_tiny(progress: bool = True,
