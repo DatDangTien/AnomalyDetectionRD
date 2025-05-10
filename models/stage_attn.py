@@ -100,5 +100,4 @@ def cal_anomaly_map(a,b, w_module=None, out_size=224, amap_mode='mul'):
             anomaly_map *= a_map
         else:
             anomaly_map += a_map
-        return anomaly_map, a_map_list
-    return None
+    return anomaly_map, a_map_list
