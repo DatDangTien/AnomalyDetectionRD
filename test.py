@@ -178,7 +178,6 @@ def evaluation(encoder, bn, decoder, dataloader, device, layer_attn=None,
         if hist:
             visualize_hist_scores(pr_list_sp, gt_list_sp, hist)
 
-    # return auroc_px, auroc_sp, aupro_sp, ap_px, ap_sp, overkill, underkill
     return auroc_sp, ap_sp, auroc_px, aupro_px, ap_px, overkill, underkill
 
 def test(dataset, _class_):
