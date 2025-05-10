@@ -80,7 +80,7 @@ def adap_loss_function(a, b, w_module=None,
     if w_module is None:
         w = torch.ones(len(a)).float()
     else:
-        w = w_module()
+        w = w_module(b)
 
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
@@ -100,7 +100,7 @@ def cal_anomaly_map(a,b, w_module=None, out_size=224, amap_mode='mul'):
     if w_module is None:
         w = torch.ones(len(a))
     else:
-        w = w_module()
+        w = w_module(b)
 
     if amap_mode == 'mul':
         anomaly_map = np.ones([out_size, out_size])
