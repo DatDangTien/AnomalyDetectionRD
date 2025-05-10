@@ -1090,7 +1090,7 @@ def mambavision_b21k(
     drop_path_rate = kwargs.pop("drop_path_rate", 0.3)
     layer_scale = kwargs.pop("layer_scale", 1e-5)
     model = MambaVision(
-        num_classes=21841,
+        # num_classes=21841,
         depths=depths,
         num_heads=num_heads,
         window_size=window_size,
