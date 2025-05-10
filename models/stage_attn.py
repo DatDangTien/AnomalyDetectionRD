@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import numpy as np
-class AdaptiveStages(nn.Module):
+class AdaptiveStagesFusion(nn.Module):
     def __init__(self,
                  num_stages=4,
                  w_init: float = 1.0,
@@ -15,9 +15,23 @@ class AdaptiveStages(nn.Module):
         self.scale = scale
         self.inverse = inverse
         self.weight = nn.Parameter(torch.full((num_stages,), w_init))
+        self.linears = None
 
-    def forward(self) -> torch.Tensor:
+    def forward(self, x) -> torch.Tensor:
         # If not trainable, return no grad weight.
+        if not self.linears:
+            self._init_linears(x)
+
+        fusion_scores = []
+        for i in range(len(x)):
+            # [B,C,H,W] -> [B,C,1,1] -> [B,C] -> [B,1] -> [1]
+            max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
+            fusion_score = torch.mean(self.linears[i](max_pool), dim=0)
+            fusion_scores.append(fusion_score)
+        fusion_scores = torch.stack(fusion_scores)
+        print('fusion scores: ',fusion_scores)
+
+
         w = self.weight
         if not self.trainable:
             with torch.no_grad():
@@ -27,11 +41,16 @@ class AdaptiveStages(nn.Module):
             w = 1.0 / (w + 1e-8)
 
         # Normalize
-        w = w.softmax(dim=0)
+        w = (w * fusion_scores).softmax(dim=0)
         # Scale
         if self.scale:
             w = w * self.num_stages
         return w
+
+    def _init_linears(self, x):
+        self.linears = nn.ModuleList([
+            nn.Linear(feat.shape[1], 1) for feat in x
+        ])
 
     def get_weight(self) -> torch.Tensor:
         with torch.no_grad():

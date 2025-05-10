@@ -8,7 +8,7 @@ import models.resnet as resnet
 import models.de_resnet as de_resnet
 import models.convnext as convnext
 import models.mambavision as mambavision
-from models.stage_attn import AdaptiveStages, adap_loss_function
+from models.stage_attn import AdaptiveStagesFusion, adap_loss_function
 from dataset import MVTecDataset, GFCDataset, train_collate
 import torch.backends.cudnn as cudnn
 from test import evaluation
@@ -156,7 +156,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3, trainable=use_layer_attn, inverse=weight_inverse)
+    layer_attn = AdaptiveStagesFusion(num_stages=3, trainable=use_layer_attn, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)

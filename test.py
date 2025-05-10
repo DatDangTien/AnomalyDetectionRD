@@ -6,7 +6,7 @@ import models.de_resnet as de_resnet
 import models.convnext as convnext
 import models.mambavision as mambavision
 from dataset import MVTecDataset, GFCDataset, get_data_transforms
-from models.stage_attn import cal_anomaly_map, AdaptiveStages
+from models.stage_attn import cal_anomaly_map, AdaptiveStagesFusion
 from torch.nn import functional as F
 from sklearn.metrics import roc_auc_score, average_precision_score, auc, roc_curve
 import cv2
@@ -219,7 +219,7 @@ def test(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
+    layer_attn = AdaptiveStagesFusion(num_stages=3, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -298,7 +298,7 @@ def visualize(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStages(num_stages=3, inverse=weight_inverse)
+    layer_attn = AdaptiveStagesFusion(num_stages=3, inverse=weight_inverse)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
