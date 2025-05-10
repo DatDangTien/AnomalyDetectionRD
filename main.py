@@ -156,7 +156,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStagesFusion(num_stages=3, trainable=use_layer_attn, inverse=weight_inverse)
+    layer_attn = AdaptiveStagesFusion(num_stages=3, trainable=use_layer_attn, inverse=weight_inverse, device=device)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)

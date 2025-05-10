@@ -8,7 +8,8 @@ class AdaptiveStagesFusion(nn.Module):
                  w_init: float = 1.0,
                  trainable:bool = False,
                  scale: bool = True,
-                 inverse: bool = False,):
+                 inverse: bool = False,
+                 device = 'cpu'):
         super().__init__()
         self.num_stages = num_stages
         self.trainable = trainable
@@ -16,6 +17,7 @@ class AdaptiveStagesFusion(nn.Module):
         self.inverse = inverse
         self.weight = nn.Parameter(torch.full((num_stages,), w_init))
         self.linears = None
+        self.device = device
 
     def forward(self, x) -> torch.Tensor:
         # If not trainable, return no grad weight.
@@ -49,7 +51,7 @@ class AdaptiveStagesFusion(nn.Module):
 
     def _init_linears(self, x):
         self.linears = nn.ModuleList([
-            nn.Linear(feat.shape[1], 1) for feat in x
+            nn.Linear(feat.shape[1], 1, device=self.device) for feat in x
         ])
 
     def get_weight(self) -> torch.Tensor:
