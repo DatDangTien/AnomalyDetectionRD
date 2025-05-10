@@ -246,7 +246,7 @@ def test(dataset, _class_):
 
     result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn,
                                 _class_,predict_path, hist=hist_path, timing=True)
-    print(f'{_class_}: ' + ' '.join([str(me_num) for me_num in result_metrics]))
+    print(f'{_class_.capitalize()}: ' + ' '.join([str(me_num) for me_num in result_metrics]))
     return result_metrics
 
 def visualize(dataset, _class_):
