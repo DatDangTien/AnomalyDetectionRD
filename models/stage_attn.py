@@ -47,7 +47,9 @@ class AdaptiveStagesFusion(nn.Module):
             w = 1.0 / (w + 1e-8)
 
         # Normalize
-        w = (w * fusion_scores).softmax(dim=0)
+        w = (w * fusion_scores)
+        print('w: ',w)
+        w = w.softmax(dim=0)
         # Scale
         if self.scale:
             w = w * self.num_stages
