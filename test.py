@@ -371,7 +371,9 @@ def visualize(dataset, _class_):
             img = np.uint8(min_max_norm(img)*255)
             ano_map = cvt2heatmap(ano_map*255)
             ano_map = show_cam_on_image(img, ano_map)
-            cv2.putText(ano_map, '%.3f' % ano_score, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+            # Print anomaly score to img
+            # cv2.putText(ano_map, '%.3f' % ano_score, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
             # # Draw crop box
             # if dataset == 'gfc':
