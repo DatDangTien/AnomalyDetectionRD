@@ -11,6 +11,10 @@ model_urls = {
     "convnext_s": "https://dl.fbaipublicfiles.com/convnext/convnext_small_1k_224_ema.pth",
     "convnext_b": "https://dl.fbaipublicfiles.com/convnext/convnext_base_1k_224_ema.pth",
     "convnext_l": "https://dl.fbaipublicfiles.com/convnext/convnext_large_1k_224_ema.pth",
+    "convnext_t_22k": "https://dl.fbaipublicfiles.com/convnext/convnext_tiny_22k_224.pth",
+    "convnext_s_22k": "https://dl.fbaipublicfiles.com/convnext/convnext_small_22k_224.pth",
+    "convnext_b_22k": "https://dl.fbaipublicfiles.com/convnext/convnext_base_22k_224.pth",
+    "convnext_l_22k": "https://dl.fbaipublicfiles.com/convnext/convnext_large_22k_224.pth",
 }
 
 class LayerNorm(nn.Module):
@@ -272,7 +276,7 @@ def convnext_tiny(pretrained: bool = False,
     kwargs['dims'] = [96, 192, 384, 768]
     kwargs['drop_path_rate'] = 0.1
     kwargs['num_states'] = 3
-    return _convnext('convnext_t', pretrained, progress, **kwargs), BN_layer(Block, **kwargs)
+    return _convnext('convnext_t_22k', pretrained, progress, **kwargs), BN_layer(Block, **kwargs)
 
 
 def convnext_small(pretrained: bool = False,
@@ -284,7 +288,7 @@ def convnext_small(pretrained: bool = False,
     kwargs['dims'] = [96, 192, 384, 768]
     kwargs['drop_path_rate'] = 0.4
     kwargs['num_states'] = 3
-    return _convnext('convnext_s', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
+    return _convnext('convnext_s_22k', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
 
 
 def convnext_base(pretrained: bool = False,
@@ -296,7 +300,7 @@ def convnext_base(pretrained: bool = False,
     kwargs['dims'] = [128, 256, 512, 1024]
     kwargs['drop_path_rate'] = 0.5
     kwargs['num_states'] = 3
-    return _convnext('convnext_b', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
+    return _convnext('convnext_b_22k', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
 
 
 def convnext_large(pretrained: bool = False,
@@ -308,7 +312,7 @@ def convnext_large(pretrained: bool = False,
     kwargs['dims'] = [192, 384, 768, 1536]
     kwargs['drop_path_rate'] = 0.5
     kwargs['num_states'] = 3
-    return _convnext('convnext_l', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
+    return _convnext('convnext_l_22k', pretrained, progress, depths, **kwargs), BN_layer(Block, **kwargs)
 
 
 def de_convnext_tiny(progress: bool = True,
