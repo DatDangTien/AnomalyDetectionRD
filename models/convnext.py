@@ -233,7 +233,7 @@ class De_ConvNeXt(nn.Module):
         cur = 0
         for i in range(num_states):
             stage = nn.Sequential(
-                *[Block(dim=dims[i], drop_path=dp_rates[cur + j],
+                *[Block(dim=dims[i]*2, drop_path=dp_rates[cur + j],
                         layer_scale_init_value=layer_scale_init_value,
                         norm_eps=norm_eps) for j in range(depths[i])]
             )
@@ -254,9 +254,9 @@ class De_ConvNeXt(nn.Module):
         # print('Decoder__________________')
         for i in range(self.num_states):
             # print(x.shape)
-            x = self.upsample_layers[i](x)
-            # print(x.shape)
             x = self.stages[i](x)
+            # print(x.shape)
+            x = self.upsample_layers[i](x)
             # print(x.shape)
             feature.append(x)
         # print(len(feature))
