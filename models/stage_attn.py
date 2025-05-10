@@ -28,7 +28,7 @@ class AdaptiveStagesFusion(nn.Module):
         for i in range(len(x)):
             # [B,C,H,W] -> [B,C,1,1] -> [B,C] -> [B,1] -> [1]
             if x[i].isnan().any():
-                print('Decoder error: ', x[i])
+                print('Decoder error: ')
             max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
             print(max_pool)
             fusion_score = torch.mean(self.linears[i](max_pool))
