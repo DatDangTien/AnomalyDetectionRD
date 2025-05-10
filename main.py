@@ -325,7 +325,7 @@ backbone_module ={
     'convnext-l': (convnext.convnext_large, convnext.de_convnext_large),
     'mambavision-t': (mambavision.mambavision_t, mambavision.demambavision_t),
     'mambavision-s': (mambavision.mambavision_s, mambavision.demambavision_s),
-    'mambavision-b': (mambavision.mambavision_b, mambavision.demambavision_b),
+    'mambavision-b': (mambavision.mambavision_b21k, mambavision.demambavision_b),
     'mambavision-l': (mambavision.mambavision_l, mambavision.demambavision_l),
 }
 
