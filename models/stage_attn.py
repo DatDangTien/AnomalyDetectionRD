@@ -17,6 +17,7 @@ class AdaptiveStagesFusion(nn.Module):
         self.inverse = inverse
         self.weight = nn.Parameter(torch.full((num_stages,), w_init))
         self.linears = None
+        self.act = nn.Softplus()
         self.device = device
 
     def forward(self, x) -> torch.Tensor:
@@ -32,7 +33,7 @@ class AdaptiveStagesFusion(nn.Module):
                 # print('Decoder error: ')
             max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
             print(max_pool.shape)
-            fusion_score = self.linears[i](max_pool).squeeze(-1)
+            fusion_score = self.act(self.linears[i](max_pool).squeeze(-1))
             # print(fusion_score)
             fusion_scores.append(fusion_score)
         fusion_scores = torch.stack(fusion_scores, dim=0)
@@ -64,7 +65,7 @@ class AdaptiveStagesFusion(nn.Module):
     def _init_linears(self, x):
         self.linears = nn.ModuleList([
             nn.Sequential(
-                nn.LayerNorm(feat.shape[-1], device=self.device),
+                nn.LayerNorm(feat.shape[1], device=self.device),
                 nn.Linear(feat.shape[1], 1, device=self.device)
             ) for feat in x
         ])
