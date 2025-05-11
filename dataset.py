@@ -131,7 +131,7 @@ class RandomNoise():
 
 
 class GFCDataset(torch.utils.data.Dataset):
-    def __init__(self, root, image_size, phase, transform=None, filter=None, cropped=True):
+    def __init__(self, root, image_size, phase, transform=None, filter=None, cropped=False, keep_ori=False):
         if phase == 'train':
             self.img_path = os.path.join(root, 'train')
             self.train = True
@@ -141,6 +141,7 @@ class GFCDataset(torch.utils.data.Dataset):
         self.img_paths = root
         self.metadata = {}
         self.cropped = cropped
+        self.keep_ori = keep_ori
         self.mean, self.std = None, None
         # load dataset
         self.img_paths, self.labels = self.load_dataset()  # self.labels => good : 0, anomaly : 1
@@ -200,18 +201,18 @@ class GFCDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         img_path, label = self.img_paths[idx], self.labels[idx]
 
-        img = Image.open(img_path).convert('RGB')
-        # # CROP
-        # if self.cropped:
-        #     img = self.imread_center(img_path, idx)
-        # else:
-        #     img = Image.open(img_path).convert('RGB')
+        # img = Image.open(img_path).convert('RGB')
+        # CROP
+        if self.cropped and not self.keep_ori:
+            img = self.imread_center(img_path, idx)
+        else:
+            img = Image.open(img_path).convert('RGB')
 
         # AUGMENTATION
         if self.train:
             img = self.augment_transform(img)
         #
-        if self.cropped:
+        if not self.keep_ori:
             img = self.transform(img)
 
         gt = torch.tensor(float('nan'))

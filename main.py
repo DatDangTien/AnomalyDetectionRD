@@ -117,12 +117,12 @@ def train(dataset, _class_, filter=None, filter_name=None):
             os.makedirs(train_log_path)
         train_log_path += f'{backbone}_{_class_}.txt'
 
-        train_data = GFCDataset(root=data_path, image_size=image_size, phase="train", filter=filter)
+        train_data = GFCDataset(root=data_path, image_size=image_size, phase="train", filter=filter, cropped=crop)
         # mean_std = train_data.get_meta_data()
         # test_data = GFCDataset(root=data_path, image_size=image_size, phase="test",
         #                        transform=get_data_transforms(image_size, image_size, filter=filter))
 
-        test_data = GFCDataset(root=data_path, image_size=image_size, phase="test", filter=filter)
+        test_data = GFCDataset(root=data_path, image_size=image_size, phase="test", filter=filter, cropped=crop)
     print(_class_)
     start_time = time.time()
     data_path = './dataset'
@@ -319,6 +319,7 @@ def Parser():
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-3, help='Learning rate')
     parser.add_argument('-pa', '--patience', type=int, default=0, help='Early stop patience')
     parser.add_argument('-p', '--print_shape', type=bool, default=False, help='Print shape of each module')
+    parser.add_argument('-cr', '--crop', type=bool, default=False, help='Crop GFC images')
     return parser.parse_args()
 
 
@@ -360,6 +361,7 @@ if __name__ == '__main__':
     backbone = args.backbone
     patience = args.patience
     print_shape = args.print_shape
+    crop = args.crop
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)

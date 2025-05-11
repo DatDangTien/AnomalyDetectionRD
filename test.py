@@ -212,7 +212,7 @@ def test(dataset, _class_):
         # test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
         test_data = MVTecDataset(root=test_path, image_size=image_size, phase="test")
     else:
-        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test")
+        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test", cropped=crop)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
     print(backbone)
@@ -297,8 +297,8 @@ def visualize(dataset, _class_):
     else:
         # test_data = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform)
         # test_data_ori = GFCDataset(root=test_path, image_size=image_size, phase="test", transform=transform, cropped=False)
-        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test")
-        test_data_ori = GFCDataset(root=test_path, image_size=image_size, phase="test", cropped=False)
+        test_data = GFCDataset(root=test_path, image_size=image_size, phase="test", cropped=crop)
+        test_data_ori = GFCDataset(root=test_path, image_size=image_size, phase="test", keep_ori=True)
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
 
     print(backbone)
@@ -608,6 +608,7 @@ def Parser():
     parser.add_argument('-c', '--dclass', type=str, default='', help='Data class.')
     parser.add_argument('-w', '--layer_weights', type=int, default=0,
                         choices=[0,1,2], help='Layer weights flag, 0: no weights, 1: adaptive weight, 2: inverse adaptive weight')
+    parser.add_argument('-cr', '--crop', type=bool, default=False, help='Crop GFC images')
     return parser.parse_args()
 
 backbone_module ={
@@ -635,6 +636,7 @@ if __name__ == '__main__':
     image_size = args.image_size
     weight_inverse = (args.layer_weights == 2)
     use_layer_attn = (args.layer_weights > 0)
+    crop = args.crop
 
     item_list = []
     res_path = ''
