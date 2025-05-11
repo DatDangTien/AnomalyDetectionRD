@@ -27,12 +27,12 @@ class AdaptiveStagesFusion(nn.Module):
 
         fusion_scores = []
         for i in range(len(x)):
-            print(x[i].shape)
+            # print(x[i].shape)
             # [B,C,H,W] -> [B,C,1,1] -> [B,C] -> [B,1] -> [1]
             # if x[i].isnan().any():
                 # print('Decoder error: ')
             max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
-            print(max_pool.shape)
+            # print(max_pool.shape)
             fusion_score = self.act(self.linears[i](max_pool).squeeze(-1))
             # print(fusion_score)
             fusion_scores.append(fusion_score)
@@ -58,8 +58,8 @@ class AdaptiveStagesFusion(nn.Module):
         if self.scale:
             w = w * self.num_stages
 
-        print('fusion', fusion_scores)
-        print('true w', self.weight)
+        # print('fusion', fusion_scores)
+        # print('true w', self.weight)
         return w
 
     def _init_linears(self, x):
@@ -109,7 +109,7 @@ def adap_loss_function(a, b, w_module=None,
     else:
         w = w_module(b)
 
-    print('w', w)
+    # print('w', w)
 
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
