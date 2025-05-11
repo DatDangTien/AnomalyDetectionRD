@@ -230,7 +230,8 @@ def train(dataset, _class_, filter=None, filter_name=None):
 
         if use_layer_attn:
             for name, value in layer_attn.named_parameters():
-                print(f'{name}: {value.data}\n')
+                if name.startswith('weight'):
+                    print(f'{name}: {value.data}\n')
 
         if (epoch + 1) % 10 == 0:
             # Inverse adap weight for evaluation
