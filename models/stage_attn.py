@@ -27,8 +27,8 @@ class AdaptiveStagesFusion(nn.Module):
         fusion_scores = []
         for i in range(len(x)):
             # [B,C,H,W] -> [B,C,1,1] -> [B,C] -> [B,1] -> [1]
-            if x[i].isnan().any():
-                print('Decoder error: ')
+            # if x[i].isnan().any():
+                # print('Decoder error: ')
             max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
             print(max_pool)
             fusion_score = self.linears[i](max_pool).squeeze(-1)
@@ -36,7 +36,7 @@ class AdaptiveStagesFusion(nn.Module):
             fusion_scores.append(fusion_score)
         fusion_scores = torch.stack(fusion_scores, dim=0)
         fusion_scores = fusion_scores.mean(dim=1)
-        print('fusion scores: ',fusion_scores)
+        # print('fusion scores: ',fusion_scores)
 
 
         w = self.weight if self.trainable else self.weight.detach()
@@ -47,7 +47,7 @@ class AdaptiveStagesFusion(nn.Module):
 
         # Normalize
         w = (w * fusion_scores)
-        print('w: ',w)
+        # print('w: ',w)
         w = w.softmax(dim=0)
         # Scale
         if self.scale:
