@@ -229,6 +229,8 @@ def train(dataset, _class_, filter=None, filter_name=None):
                                                                                             val_time - epoch_time,
                                                                                             time.time()-epoch_time))
 
+        # Debug: Layer attn save miss param.
+        print(layer_attn.state_dict())
         if use_layer_attn:
             for name, value in layer_attn.named_parameters():
                 if name.startswith('weight'):
