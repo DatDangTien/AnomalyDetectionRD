@@ -36,7 +36,10 @@ class AdaptiveStagesFusion(nn.Module):
             fusion_scores.append(fusion_score)
         fusion_scores = torch.stack(fusion_scores, dim=0)
         fusion_scores = fusion_scores.mean(dim=1)
+        if not self.trainable:
+            fusion_scores = fusion_scores.detach()
         # print('fusion scores: ',fusion_scores)
+
 
 
         w = self.weight if self.trainable else self.weight.detach()
