@@ -31,10 +31,11 @@ class AdaptiveStagesFusion(nn.Module):
                 print('Decoder error: ')
             max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
             print(max_pool)
-            fusion_score = torch.mean(self.linears[i](max_pool))
+            fusion_score = self.linears[i](max_pool).squeeze(-1)
             print(fusion_score)
             fusion_scores.append(fusion_score)
-        fusion_scores = torch.stack(fusion_scores)
+        fusion_scores = torch.stack(fusion_scores, dim=0)
+        fusion_scores = fusion_scores.mean(dim=1)
         print('fusion scores: ',fusion_scores)
 
 
@@ -99,7 +100,9 @@ def adap_loss_function(a, b, w_module=None,
     penalty = 1.0 / gini
 
     # Weight loss with entropy
-    return loss + w_entropy * penalty
+    loss = loss + w_entropy * penalty
+    print(loss)
+    return loss
 
 
 def cal_anomaly_map(a,b, w_module=None, out_size=224, amap_mode='mul'):
