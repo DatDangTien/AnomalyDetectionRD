@@ -30,9 +30,9 @@ class AdaptiveStagesFusion(nn.Module):
             # if x[i].isnan().any():
                 # print('Decoder error: ')
             max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
-            print(max_pool)
+            # print(max_pool)
             fusion_score = self.linears[i](max_pool).squeeze(-1)
-            print(fusion_score)
+            # print(fusion_score)
             fusion_scores.append(fusion_score)
         fusion_scores = torch.stack(fusion_scores, dim=0)
         fusion_scores = fusion_scores.mean(dim=1)
