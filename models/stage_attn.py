@@ -50,8 +50,8 @@ class AdaptiveStagesFusion(nn.Module):
         if self.inverse:
             w = 1.0 / (w.clamp(min=1e-4))
 
-        print('w', w)
-        print('fu', fusion_scores)
+        # print('w', w)
+        # print('fu', fusion_scores)
 
         # Normalize
         if self.trainable:
