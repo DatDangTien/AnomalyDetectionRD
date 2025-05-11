@@ -16,13 +16,13 @@ class AdaptiveStagesFusion(nn.Module):
         self.scale = scale
         self.inverse = inverse
         self.weight = nn.Parameter(torch.full((num_stages,), w_init))
-        self.linears = None
+        self.linears = nn.ModuleList()
         self.act = nn.Softplus()
         self.device = device
 
     def forward(self, x) -> torch.Tensor:
         # If not trainable, return no grad weight.
-        if not self.linears:
+        if len(self.linears) == 0:
             self._init_linears(x)
 
         fusion_scores = []
@@ -67,15 +67,11 @@ class AdaptiveStagesFusion(nn.Module):
         return w
 
     def _init_linears(self, x):
-        self.linears = nn.ModuleList([
-            nn.Sequential(
+        for feat in x:
+            self.linears.append(nn.Sequential(
                 nn.LayerNorm(feat.shape[1], device=self.device),
                 nn.Linear(feat.shape[1], 1, device=self.device)
-            ) for feat in x
-        ])
-        # print(self.linears)
-        self.add_module('linears', self.linears)
-        # print(self)
+            ))
 
         for block in self.linears:
             for layer in block:
