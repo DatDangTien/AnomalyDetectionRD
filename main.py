@@ -383,7 +383,7 @@ if __name__ == '__main__':
         f.write(str(image_size) + '\n')
         f.write('\tAUROC_AD, AP_AD, AUROC_AL, PRO, AP_AL, Overkill, Underkill\n')
         for i in item_list:
-            res_class = globals()[args.func](args.dataset, i)
+            res_class = test(args.dataset, i)
             res_list.append(res_class)
             f.write(i.capitalize() + ' ' + ' '.join([str(me_num) for me_num in res_class]) + '\n')
         res_avr = [0] * len(res_class)
