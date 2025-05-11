@@ -62,11 +62,19 @@ class AdaptiveStagesFusion(nn.Module):
 
     def _init_linears(self, x):
         self.linears = nn.ModuleList([
-            nn.Linear(feat.shape[1], 1, device=self.device) for feat in x
+            nn.Sequential(
+                nn.LayerNorm(feat.shape[-1])       ,
+                nn.Linear(feat.shape[1], 1, device=self.device)
+            ) for feat in x
         ])
-        for linear in self.linears:
-            nn.init.trunc_normal_(linear.weight, std=.02)
-            nn.init.constant_(linear.bias, 0)
+        for block in self.linears:
+            for layer in block:
+                if isinstance(layer, nn.Linear):
+                    nn.init.trunc_normal_(layer.weight, std=.02)
+                    nn.init.constant_(layer.bias, 0)
+                elif isinstance(layer, nn.LayerNorm):
+                    nn.init.constant_(layer.bias, 0)
+                    nn.init.constant_(layer.weight, 1.0)
 
 
     def get_weight(self) -> torch.Tensor:
