@@ -50,6 +50,9 @@ class AdaptiveStagesFusion(nn.Module):
         if self.inverse:
             w = 1.0 / (w.clamp(min=1e-4))
 
+        print('w', w)
+        print('fu', fusion_scores)
+
         # Normalize
         if self.trainable:
             w = (w * fusion_scores)
@@ -134,7 +137,7 @@ def cal_anomaly_map(a,b, w_module=None, out_size=224, amap_mode='mul'):
     else:
         w = w_module(b)
 
-    print('w', w)
+    # print('w', w)
 
 
     if amap_mode == 'mul':
