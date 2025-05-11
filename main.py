@@ -164,6 +164,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
     decoder = decoder.to(device)
     layer_attn.to(device)
     layer_attn.freeze()
+    freeze_layer_attn = True
 
     # Layer_attn init:
     dummy_img = torch.randn(1, 3, image_size, image_size, device=device)
