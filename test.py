@@ -241,7 +241,6 @@ def test(dataset, _class_):
     decoder.load_state_dict(ckp['decoder'])
     bn.load_state_dict(ckp['bn'])
     if 'layer_attn' in ckp:
-        print(ckp['layer_attn'])
         layer_attn.load_state_dict(ckp['layer_attn'])
     if use_layer_attn:
         layer_attn.set_trainable(True)

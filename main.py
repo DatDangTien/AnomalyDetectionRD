@@ -163,6 +163,12 @@ def train(dataset, _class_, filter=None, filter_name=None):
     bn = bn.to(device)
     decoder = decoder.to(device)
     layer_attn.to(device)
+    layer_attn.freeze()
+
+    # Layer_attn init:
+    dummy_img = torch.randn(1, 3, image_size, image_size, device=device)
+    dummy_inputs = encoder(dummy_img)
+    layer_attn(dummy_inputs)
 
     if torch.cuda.device_count() > 1:
         encoder = DP(encoder)
@@ -184,9 +190,6 @@ def train(dataset, _class_, filter=None, filter_name=None):
     patience_counter = 0
     early_stop_delay = 0
 
-    # Freeze layer_attn
-    freeze_layer_attn = True
-    layer_attn.module.freeze() if isinstance(layer_attn,DP) else layer_attn.freeze()
     #  For fusion last epochs:
     #  Init flag: freeze layer_attn
     #  Unfreeze if epoch == 180
@@ -242,7 +245,6 @@ def train(dataset, _class_, filter=None, filter_name=None):
             # Inverse back for training
             layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
             print('AUROC_AD: {}, AUROC_AL: {},  PRO: {}'.format(eva[0], eva[2], eva[3]))
-            print(layer_attn.state_dict().keys())
 
             if patience == 0:
                 torch.save({'bn': bn.state_dict(),
