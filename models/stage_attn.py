@@ -38,10 +38,8 @@ class AdaptiveStagesFusion(nn.Module):
         print('fusion scores: ',fusion_scores)
 
 
-        w = self.weight
-        if not self.trainable:
-            with torch.no_grad():
-                w = torch.ones_like(self.weight)
+        w = self.weight if self.trainable else self.weight.detach()
+
         # Inverse
         if self.inverse:
             w = 1.0 / (w + 1e-8)
