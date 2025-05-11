@@ -64,6 +64,10 @@ class AdaptiveStagesFusion(nn.Module):
         self.linears = nn.ModuleList([
             nn.Linear(feat.shape[1], 1, device=self.device) for feat in x
         ])
+        for linear in self.linears:
+            nn.init.trunc_normal_(linear.weight, std=.02)
+            nn.init.constant_(linear.bias, 0)
+
 
     def get_weight(self) -> torch.Tensor:
         with torch.no_grad():
