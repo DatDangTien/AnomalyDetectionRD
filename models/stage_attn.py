@@ -134,6 +134,9 @@ def cal_anomaly_map(a,b, w_module=None, out_size=224, amap_mode='mul'):
     else:
         w = w_module(b)
 
+    print('w', w)
+
+
     if amap_mode == 'mul':
         anomaly_map = np.ones([out_size, out_size])
     else:
