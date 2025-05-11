@@ -341,6 +341,7 @@ if __name__ == '__main__':
     SEED = args.seed
     setup_seed(SEED)
 
+    kwargs = {}
     image_size = args.image_size
     epochs = args.epochs
     fusion_epochs = args.fusion_epochs
@@ -376,27 +377,27 @@ if __name__ == '__main__':
     for i in item_list:
         train(args.dataset, i)
 
-    if not os.path.isdir(res_path):
-        os.makedirs(res_path)
-    res_path += 'benchmark.txt'
-    res_list = []
-    with open(res_path, 'a') as f:
-        f.write('----------------------------\n')
-        f.write(backbone + '\n')
-        f.write(str(image_size) + '\n')
-        f.write('\tAUROC_AD, AP_AD, AUROC_AL, PRO, AP_AL, Overkill, Underkill\n')
-        for i in item_list:
-            res_class = test(args.dataset, i)
-            res_list.append(res_class)
-            f.write(i.capitalize() + ' ' + ' '.join([str(me_num) for me_num in res_class]) + '\n')
-        res_avr = [0] * len(res_class)
-        for cl in res_list:
-            for ind, me in enumerate(cl):
-                if me:
-                    res_avr[ind] += me
-        res_avr = [str(round(res_me / len(item_list), 3)) for res_me in res_avr]
-        if len(item_list) > 1:
-            f.write('Avr {}\n'.format(' '.join(res_avr)))
+    # if not os.path.isdir(res_path):
+    #     os.makedirs(res_path)
+    # res_path += 'benchmark.txt'
+    # res_list = []
+    # with open(res_path, 'a') as f:
+    #     f.write('----------------------------\n')
+    #     f.write(backbone + '\n')
+    #     f.write(str(image_size) + '\n')
+    #     f.write('\tAUROC_AD, AP_AD, AUROC_AL, PRO, AP_AL, Overkill, Underkill\n')
+    #     for i in item_list:
+    #         res_class = test(args.dataset, i)
+    #         res_list.append(res_class)
+    #         f.write(i.capitalize() + ' ' + ' '.join([str(me_num) for me_num in res_class]) + '\n')
+    #     res_avr = [0] * len(res_class)
+    #     for cl in res_list:
+    #         for ind, me in enumerate(cl):
+    #             if me:
+    #                 res_avr[ind] += me
+    #     res_avr = [str(round(res_me / len(item_list), 3)) for res_me in res_avr]
+    #     if len(item_list) > 1:
+    #         f.write('Avr {}\n'.format(' '.join(res_avr)))
 
 
     # filter_list = [BilateralFilter(d=5), WaveletFilter()]
