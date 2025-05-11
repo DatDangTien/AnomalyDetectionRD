@@ -82,6 +82,8 @@ class AdaptiveStagesFusion(nn.Module):
                     nn.init.constant_(layer.bias, 0)
                     nn.init.constant_(layer.weight, 1.0)
 
+        print(self.state_dict())
+
 
     def get_weight(self, x) -> torch.Tensor:
         with torch.no_grad():
