@@ -367,15 +367,18 @@ if __name__ == '__main__':
         else:
             item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
                          'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
-        res_path = f'./result/mvtec/benchmark.txt'
+        res_path = f'./result/mvtec/'
     else:
         # gfc dataset only 1 class
         item_list = ['gfc']
-        res_path = f'./result/gfc/benchmark.txt'
+        res_path = f'./result/gfc/'
 
     for i in item_list:
         train(args.dataset, i)
 
+    if not os.path.isdir(res_path):
+        os.makedirs(res_path)
+    res_path += 'benchmark.txt'
     res_list = []
     with open(res_path, 'a') as f:
         f.write('----------------------------\n')
