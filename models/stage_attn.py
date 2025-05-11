@@ -43,7 +43,7 @@ class AdaptiveStagesFusion(nn.Module):
 
         # Inverse
         if self.inverse:
-            w = 1.0 / (w + 1e-8)
+            w = 1.0 / (w.clamp(min=1e-4))
 
         # Normalize
         w = (w * fusion_scores)
