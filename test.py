@@ -225,10 +225,16 @@ def test(dataset, _class_):
     bn = bn.to(device)
     decoder = decoder.to(device)
     layer_attn = layer_attn.to(device)
+
+    # Layer_attn init:
+    dummy_img = torch.randn(1, 3, image_size, image_size)
+    dummy_inputs = encoder(dummy_img)
+    layer_attn(dummy_inputs)
+
+
     ckp = torch.load(ckp_path, map_location=device, weights_only=True)
     ckp = format_state_dict(ckp)    # Stripe module. prefix by DataParallel
     # print(ckp.keys())
-
     for k, v in list(ckp['bn'].items()):
         if 'memory' in k:
             ckp['bn'].pop(k)
@@ -304,6 +310,12 @@ def visualize(dataset, _class_):
     bn = bn.to(device)
     decoder = decoder.to(device)
     layer_attn = layer_attn.to(device)
+
+    # Layer_attn init:
+    dummy_img = torch.randn(1, 3, image_size, image_size)
+    dummy_inputs = encoder(dummy_img)
+    layer_attn(dummy_inputs)
+
     ckp = torch.load(ckp_path, map_location=device, weights_only=True)
     ckp = format_state_dict(ckp)    # Stripe module. prefix by DataParallel
     for k, v in list(ckp['bn'].items()):
