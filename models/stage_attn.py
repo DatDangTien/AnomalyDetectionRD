@@ -51,7 +51,8 @@ class AdaptiveStagesFusion(nn.Module):
             w = 1.0 / (w.clamp(min=1e-4))
 
         # Normalize
-        w = (w * fusion_scores)
+        if self.trainable:
+            w = (w * fusion_scores)
         # print('w: ',w)
         w = w.softmax(dim=0)
         # Scale
