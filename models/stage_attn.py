@@ -73,7 +73,9 @@ class AdaptiveStagesFusion(nn.Module):
                 nn.Linear(feat.shape[1], 1, device=self.device)
             ) for feat in x
         ])
+        print(self.linears)
         self.add_module('linears', self.linears)
+        print(self)
 
         for block in self.linears:
             for layer in block:
