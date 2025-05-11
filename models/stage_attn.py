@@ -53,7 +53,7 @@ class AdaptiveStagesFusion(nn.Module):
         if self.scale:
             w = w * self.num_stages
 
-        print('fusion', self.fusion_scores)
+        print('fusion', fusion_scores)
         print('true w', self.weight)
         return w
 
