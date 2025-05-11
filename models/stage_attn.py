@@ -80,9 +80,9 @@ class AdaptiveStagesFusion(nn.Module):
                     nn.init.constant_(layer.weight, 1.0)
 
 
-    def get_weight(self) -> torch.Tensor:
+    def get_weight(self, x) -> torch.Tensor:
         with torch.no_grad():
-            return self.forward()
+            return self.forward(x)
 
 
     def freeze(self) -> None:

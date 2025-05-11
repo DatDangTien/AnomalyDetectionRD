@@ -247,8 +247,9 @@ def test(dataset, _class_):
 
     # Print layer weight
     for k, v in layer_attn.named_parameters():
-        print(f'{k}: {v}')
-    print(layer_attn.get_weight())
+        if k.startswith('weight'):
+            print(f'{k}: {v}')
+    # print(layer_attn.get_weight())
 
     result_metrics = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn,
                                 _class_,predict_path, hist=hist_path, timing=True)
