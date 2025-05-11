@@ -16,6 +16,7 @@ from torch.nn import functional as F
 import pickle as pkl
 import time
 from argparse import ArgumentParser
+from test import test
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -358,6 +359,7 @@ if __name__ == '__main__':
 
 
     item_list = []
+    res_path = ''
 
     if args.dataset == 'mvtec':
         if args.dclass != '':
@@ -365,12 +367,34 @@ if __name__ == '__main__':
         else:
             item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
                          'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
+        res_path = f'./result/mvtec/benchmark.txt'
     else:
         # gfc dataset only 1 class
         item_list = ['gfc']
+        res_path = f'./result/gfc/benchmark.txt'
 
     for i in item_list:
         train(args.dataset, i)
+
+    res_list = []
+    with open(res_path, 'a') as f:
+        f.write('----------------------------\n')
+        f.write(backbone + '\n')
+        f.write(str(image_size) + '\n')
+        f.write('\tAUROC_AD, AP_AD, AUROC_AL, PRO, AP_AL, Overkill, Underkill\n')
+        for i in item_list:
+            res_class = globals()[args.func](args.dataset, i)
+            res_list.append(res_class)
+            f.write(i.capitalize() + ' ' + ' '.join([str(me_num) for me_num in res_class]) + '\n')
+        res_avr = [0] * len(res_class)
+        for cl in res_list:
+            for ind, me in enumerate(cl):
+                if me:
+                    res_avr[ind] += me
+        res_avr = [str(round(res_me / len(item_list), 3)) for res_me in res_avr]
+        if len(item_list) > 1:
+            f.write('Avr {}\n'.format(' '.join(res_avr)))
+
 
     # filter_list = [BilateralFilter(d=5), WaveletFilter()]
     # filter_name_list = ['bilateral', 'wavelet']

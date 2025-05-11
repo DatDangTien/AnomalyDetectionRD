@@ -227,7 +227,7 @@ def test(dataset, _class_):
     layer_attn = layer_attn.to(device)
 
     # Layer_attn init:
-    dummy_img = torch.randn(1, 3, image_size, image_size)
+    dummy_img = torch.randn(1, 3, image_size, image_size, device=device)
     dummy_inputs = encoder(dummy_img)
     layer_attn(dummy_inputs)
 
@@ -312,7 +312,7 @@ def visualize(dataset, _class_):
     layer_attn = layer_attn.to(device)
 
     # Layer_attn init:
-    dummy_img = torch.randn(1, 3, image_size, image_size)
+    dummy_img = torch.randn(1, 3, image_size, image_size, device=device)
     dummy_inputs = encoder(dummy_img)
     layer_attn(dummy_inputs)
 
