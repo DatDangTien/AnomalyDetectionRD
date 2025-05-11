@@ -236,7 +236,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
         # Debug: Layer attn save miss param.
         if use_layer_attn:
             for name, value in layer_attn.named_parameters():
-                if name.startswith('weight'):
+                if 'weight' in name:
                     print(f'{name}: {value.data}\n')
 
         if (epoch + 1) % 10 == 0:
