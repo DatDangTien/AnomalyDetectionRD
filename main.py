@@ -175,7 +175,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
         encoder = DP(encoder)
         bn = DP(bn)
         decoder = DP(decoder)
-        layer_attn = DP(layer_attn)
+        # layer_attn = DP(layer_attn)
 
     optimizer = torch.optim.Adam(list(decoder.parameters())+list(bn.parameters())+list(layer_attn.parameters()),
                                  lr=learning_rate, betas=optimizer_momentum)

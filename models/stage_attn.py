@@ -109,8 +109,6 @@ def adap_loss_function(a, b, w_module=None,
                        device='cpu'):
     cos_loss = torch.nn.CosineSimilarity()
 
-    print('a: ',len(a))
-    print(a[0].shape)
     if w_module is None:
         w = torch.ones(len(a)).float()
     else:
