@@ -62,8 +62,9 @@ class AdaptiveStagesFusion(nn.Module):
         if self.scale:
             w = w * self.num_stages
 
-        print('fusion', fusion_scores)
         print('true w', self.weight)
+        print('fusion', fusion_scores)
+        print('w output:', w)
         return w
 
     def _init_linears(self, x):
@@ -91,9 +92,11 @@ class AdaptiveStagesFusion(nn.Module):
 
     def freeze(self) -> None:
         self.weight.requires_grad = False
+        self.trainable = False
 
     def unfreeze(self) -> None:
         self.weight.requires_grad = True
+        self.trainable = True
 
     def set_inverse(self) -> None:
         self.inverse = not self.inverse
