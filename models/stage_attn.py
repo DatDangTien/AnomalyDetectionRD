@@ -28,7 +28,7 @@ class AdaptiveStagesFusion(nn.Module):
         fusion_scores = []
         for i in range(len(x)):
             # print(x[i].shape)
-            # [B,C,H,W] -> [B,C,1,1] -> [B,C] -> [B,1] -> [1]
+            # [B,C,H,W] -> [B,C,1,1] -> [B,C] -> [B,1] -> [N,B] -> [N]
             # if x[i].isnan().any():
                 # print('Decoder error: ')
             max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
@@ -62,8 +62,8 @@ class AdaptiveStagesFusion(nn.Module):
         if self.scale:
             w = w * self.num_stages
 
-        # print('fusion', fusion_scores)
-        # print('true w', self.weight)
+        print('fusion', fusion_scores)
+        print('true w', self.weight)
         return w
 
     def _init_linears(self, x):
