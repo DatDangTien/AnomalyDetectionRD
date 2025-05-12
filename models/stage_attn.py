@@ -50,9 +50,6 @@ class AdaptiveStagesFusion(nn.Module):
         if self.inverse:
             w = 1.0 / (w.clamp(min=1e-4))
 
-        # print('w', w)
-        # print('fu', fusion_scores)
-
         # Normalize
         if self.trainable:
             w = (w * fusion_scores)
@@ -112,6 +109,8 @@ def adap_loss_function(a, b, w_module=None,
                        device='cpu'):
     cos_loss = torch.nn.CosineSimilarity()
 
+    print('a: ',len(a))
+    print(a[0].shape)
     if w_module is None:
         w = torch.ones(len(a)).float()
     else:
