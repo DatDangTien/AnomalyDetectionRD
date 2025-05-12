@@ -57,8 +57,6 @@ class AdaptiveStagesFusion(nn.Module):
         # Scale
         if self.scale:
             w = w * self.num_stages
-
-        print('true w', self.weight)
         return w
 
     def _init_linears(self, x):
