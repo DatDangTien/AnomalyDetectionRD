@@ -116,11 +116,13 @@ def adap_loss_function(a, b, w_module=None,
 
     # print('w', w)
 
+    print('w: ', w)
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
         stage_loss = torch.mean(1 - cos_loss(a[item].view(a[item].shape[0], -1),
                                              b[item].view(b[item].shape[0], -1)))
         loss = loss + w[item] * stage_loss
+        print('stage', stage_loss)
 
     # Entropy penalty
     gini = 1 - torch.sum((w / len(a)) ** 2)
@@ -128,6 +130,8 @@ def adap_loss_function(a, b, w_module=None,
 
     # Weight loss with entropy
     loss = loss + w_entropy * penalty
+    print('loss: ',loss)
+    print('penalty: ',w_entropy * penalty)
     # print(loss)
     return loss
 
