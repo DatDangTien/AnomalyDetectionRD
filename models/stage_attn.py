@@ -118,8 +118,9 @@ def adap_loss_function(a, b, w_module=None,
         loss = loss + w[item] * stage_loss
 
     # Entropy penalty
-    gini = 1 - torch.sum((w / len(w)) ** 2)
-    penalty = 1.0 / gini
+    # gini = 1 - torch.sum((w / len(w)) ** 2)
+    # penalty = 1.0 / gini
+    penalty = torch.sum((w / len(w)) ** 2)
 
     # Weight loss with entropy
     loss = loss + w_entropy * penalty
