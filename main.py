@@ -314,7 +314,7 @@ def Parser():
                         choices=[0,1,2], help='Layer weights flag, 0: no weights, 1: adaptive weight, 2: inverse adaptive weight')
     parser.add_argument('-s', '--seed', type=int, default=111, help='Seed number')
     parser.add_argument('-e', '--epochs', type=int, default=200, help='Number of train epochs')
-    parser.add_argument('-fe', '--fusion_epochs', type=int, default=20, help='Number of fusion epochs')
+    parser.add_argument('-fe', '--fusion_epochs', type=int, default=40, help='Number of fusion epochs')
     parser.add_argument('-bs', '--batch_size', type=int, default=16, help='Batch size')
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-3, help='Learning rate')
     parser.add_argument('-pa', '--patience', type=int, default=0, help='Early stop patience')
