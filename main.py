@@ -198,6 +198,13 @@ def train(dataset, _class_, filter=None, filter_name=None):
 
     train_time = time.time()
     for epoch in range(epochs):
+        # Unfreeze layer attn
+        if use_layer_attn:
+            if epoch == epochs - fusion_epochs:
+                freeze_layer_attn = False
+                print('Unfreeze layer_attn')
+                layer_attn.module.unfreeze() if isinstance(layer_attn,DP) else layer_attn.unfreeze()
+
         epoch_time = time.time()
         bn.train()
         decoder.train()
@@ -251,13 +258,6 @@ def train(dataset, _class_, filter=None, filter_name=None):
                 torch.save({'bn': bn.state_dict(),
                             'decoder': decoder.state_dict(),
                             'layer_attn': layer_attn.state_dict()}, ckp_path)
-
-
-        if use_layer_attn:
-            if epoch + 1 == epochs - fusion_epochs:
-                freeze_layer_attn = False
-                print('Unfreeze layer_attn')
-                layer_attn.module.unfreeze() if isinstance(layer_attn,DP) else layer_attn.unfreeze()
 
         if patience > 0:
             if loss_dict['val'][epoch] < best_val_loss:
