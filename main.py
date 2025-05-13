@@ -248,10 +248,10 @@ def train(dataset, _class_, filter=None, filter_name=None):
 
         if (epoch + 1) % 10 == 0:
             # Inverse adap weight for evaluation
-            layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
+            # layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
             eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
             # Inverse back for training
-            layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
+            # layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
             print('AUROC_AD: {}, AUROC_AL: {},  PRO: {}'.format(eva[0], eva[2], eva[3]))
 
             if patience == 0:
