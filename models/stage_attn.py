@@ -28,7 +28,7 @@ class AdaptiveStagesFusion(nn.Module):
         fusion_scores = []
         for i in range(len(x)):
             # print(x[i].shape)
-            # [B,C,H,W] -> [B,C,1,1] -> [B,C] -> [B,1] -> [N,B] -> [N]
+            # [B,C,H,W] -> [B,C,1,1] -> [B,C] -> [B,1] -> [B,N]
             # if x[i].isnan().any():
             # print('Decoder error: ')
             max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
@@ -36,8 +36,8 @@ class AdaptiveStagesFusion(nn.Module):
             fusion_score = self.act(self.linears[i](max_pool).squeeze(-1))
             # print(fusion_score)
             fusion_scores.append(fusion_score)
-        fusion_scores = torch.stack(fusion_scores, dim=0)
-        fusion_scores = fusion_scores.mean(dim=1)
+        fusion_scores = torch.stack(fusion_scores, dim=1)
+        # fusion_scores = fusion_scores.max(dim=0)
         if not self.trainable:
             fusion_scores = fusion_scores.detach()
         # print('fusion scores: ',fusion_scores)
@@ -53,9 +53,10 @@ class AdaptiveStagesFusion(nn.Module):
         # Feature scale
         if self.trainable:
             w = (w * fusion_scores)
+            print('w*fusion: ', w.shape)
 
         # Normalize
-        w = w.softmax(dim=0)
+        w = w.softmax(dim=1)
         # Scale
         if self.scale:
             w = w * self.num_stages
@@ -64,7 +65,7 @@ class AdaptiveStagesFusion(nn.Module):
     def _init_linears(self, x):
         for feat in x:
             self.linears.append(nn.Sequential(
-                nn.LayerNorm(feat.shape[1], device=self.device),
+                # nn.LayerNorm(feat.shape[1], device=self.device),
                 nn.Linear(feat.shape[1], 1, device=self.device)
             ))
 
@@ -106,16 +107,22 @@ def adap_loss_function(a, b, w_module=None,
                        device='cpu'):
     cos_loss = torch.nn.CosineSimilarity()
 
+    # w: Tensor(B, N)
     if w_module is None:
         w = torch.ones(len(a)).float()
     else:
         w = w_module(b)
 
+    print('w: ', w)
+
+
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
-        stage_loss = torch.mean(1 - cos_loss(a[item].view(a[item].shape[0], -1),
-                                             b[item].view(b[item].shape[0], -1)))
-        loss = loss + w[item] * stage_loss
+        print(w[:, item].shape)
+        stage_loss = torch.mean(w[:, item] * (1 - cos_loss(a[item].view(a[item].shape[0], -1),
+                                                           b[item].view(b[item].shape[0], -1))))
+        # loss = loss + w[item] * stage_loss
+        loss = loss + stage_loss
 
     # Entropy penalty
     # gini = 1 - torch.sum((w / len(w)) ** 2)
@@ -148,6 +155,7 @@ def cal_anomaly_map(a,b, w_module=None, out_size=224, amap_mode='mul'):
         a_map = torch.unsqueeze(a_map, dim=1)
         a_map = F.interpolate(a_map, size=out_size, mode='bilinear', align_corners=True)
         # Adaptive stage weight
+        print('amap: ', a_map.shape)
         a_map = a_map * w[i]
         a_map = a_map[0, 0, :, :].to('cpu').detach().numpy()
         a_map_list.append(a_map)
