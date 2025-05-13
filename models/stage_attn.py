@@ -123,6 +123,7 @@ def adap_loss_function(a, b, w_module=None,
 
     # Weight loss with entropy
     loss = loss + w_entropy * penalty
+    print(w_entropy * penalty)
     return loss
 
 
