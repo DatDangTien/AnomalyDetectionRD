@@ -318,6 +318,7 @@ def Parser():
     parser.add_argument('-bs', '--batch_size', type=int, default=16, help='Batch size')
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-3, help='Learning rate')
     parser.add_argument('-pa', '--patience', type=int, default=0, help='Early stop patience')
+    parser.add_argument('-er', '--entropy_rate', type=float, default=0.05, help='Entropy rate in loss')
     parser.add_argument('-p', '--print_shape', type=bool, default=False, help='Print shape of each module')
     parser.add_argument('-cr', '--crop', type=bool, default=False, help='Crop GFC images')
     return parser.parse_args()
@@ -354,7 +355,7 @@ if __name__ == '__main__':
     fusion_epochs = args.fusion_epochs
     use_layer_attn = (args.layer_weights > 0)
     weight_inverse = (args.layer_weights == 2)
-    layer_entropy = 0.04
+    layer_entropy = args.entropy_rate
     learning_rate = args.learning_rate
     optimizer_momentum = (0.5, 0.999)
     batch_size = args.batch_size
