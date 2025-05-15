@@ -10,12 +10,14 @@ class AdaptiveStagesFusion(nn.Module):
                  trainable:bool = False,
                  scale: bool = True,
                  inverse: bool = False,
+                 f_inverse: bool = False,
                  device = 'cpu'):
         super().__init__()
         self.num_stages = num_stages
         self.trainable = trainable
         self.scale = scale
         self.inverse = inverse
+        self.f_inverse = f_inverse
         self.w_alpha = w_alpha
         self.weight = nn.Parameter(torch.full((num_stages,), w_init))
         self.linears = nn.ModuleList()
@@ -43,15 +45,17 @@ class AdaptiveStagesFusion(nn.Module):
         # fusion_scores = fusion_scores.max(dim=0)
         if not self.trainable:
             fusion_scores = fusion_scores.detach()
-        print('fusion scores: ',fusion_scores)
+        # print('fusion scores: ',fusion_scores)
+        if self.f_inverse:
+            fusion_scores = 1.0 / (fusion_scores + 1e-6)
+
+
         w = self.weight if self.trainable else self.weight.detach()
         # W-Alpha scale
         w = w * self.w_alpha
-
-
         # Inverse
         if self.inverse:
-            w = 1.0 / (w.clamp(min=1e-4))
+            w = 1.0 / (w + 1e-6)
 
         # Feature scale
         if self.trainable:
@@ -66,8 +70,8 @@ class AdaptiveStagesFusion(nn.Module):
         if self.scale:
             w = w * self.num_stages
 
-        print('w: ', self.weight)
-        print('W: ', w)
+        # print('w: ', self.weight)
+        # print('W: ', w)
 
         return w
 
@@ -123,7 +127,7 @@ def adap_loss_function(a, b, w_module=None,
     else:
         w = w_module(b)
 
-    # print(w[0])
+    print(w[0])
 
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):

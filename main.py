@@ -157,7 +157,8 @@ def train(dataset, _class_, filter=None, filter_name=None):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStagesFusion(num_stages=3, trainable=use_layer_attn, w_alpha=w_alpha, inverse=weight_inverse, device=device)
+    layer_attn = AdaptiveStagesFusion(num_stages=3, trainable=use_layer_attn, w_alpha=w_alpha,
+                                      inverse=weight_inverse, f_inverse=inverse_gap, device=device)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -314,6 +315,7 @@ def Parser():
     parser.add_argument('-w', '--layer_weights', type=int, default=0,
                         choices=[0,1,2], help='Layer weights flag, 0: no weights, 1: adaptive weight, 2: inverse adaptive weight')
     parser.add_argument('-wa', '--w_alpha', type=float, default=1, help='Adaptive weight alpha, alpha > 1: weight sharper.')
+    parser.add_argument('-ig', '--inverse_gap', type=bool, default=False, help='Inverse gap weight')
     parser.add_argument('-s', '--seed', type=int, default=111, help='Seed number')
     parser.add_argument('-e', '--epochs', type=int, default=200, help='Number of train epochs')
     parser.add_argument('-fe', '--fusion_epochs', type=int, default=40, help='Number of fusion epochs')
@@ -366,6 +368,7 @@ if __name__ == '__main__':
     print_shape = args.print_shape
     crop = args.crop
     w_alpha = args.w_alpha
+    inverse_gap = args.inverse_gap
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
