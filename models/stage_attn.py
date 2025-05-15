@@ -58,6 +58,7 @@ class AdaptiveStagesFusion(nn.Module):
             # Expand to [B, N]
             w = w.expand(x[0].shape[0], -1)
 
+        print(w)
         # Normalize
         w = w.softmax(dim=1)
         # Scale
@@ -117,7 +118,7 @@ def adap_loss_function(a, b, w_module=None,
     else:
         w = w_module(b)
 
-    print(w)
+    print(w[0])
 
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
