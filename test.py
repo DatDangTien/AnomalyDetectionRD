@@ -405,7 +405,7 @@ def visualize(dataset, _class_):
 
             for index, amap in enumerate(amp_list):
                 ano_map = min_max_norm(amap)
-                ano_map = cvt2heatmap(ano_map * 255)
+                ano_map = np.uint8(cvt2heatmap(ano_map * 255))
                 cv2.imwrite('{}{}_{}_stage{}.png'.format(result_heat, count, typ[0], index), ano_map)
                 count += 1
 
