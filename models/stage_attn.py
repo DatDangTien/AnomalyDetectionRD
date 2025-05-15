@@ -115,7 +115,7 @@ def adap_loss_function(a, b, w_module=None,
     else:
         w = w_module(b)
 
-    print('w: ', w)
+    # print('w: ', w)
 
 
     loss = torch.tensor(0.0, device=device)
