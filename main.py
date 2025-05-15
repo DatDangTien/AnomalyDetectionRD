@@ -163,6 +163,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
     bn = bn.to(device)
     decoder = decoder.to(device)
     layer_attn.to(device)
+    print('Freeze layer attn')
     layer_attn.freeze()
     freeze_layer_attn = True
 
