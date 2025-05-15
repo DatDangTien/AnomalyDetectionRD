@@ -33,7 +33,7 @@ class AdaptiveStagesFusion(nn.Module):
             # [B,C,H,W] -> [B,C,1,1] -> [B,C] -> [B,1] -> [B,N]
             # if x[i].isnan().any():
             # print('Decoder error: ')
-            max_pool = F.adaptive_max_pool2d(x[i], output_size=1).squeeze(-1).squeeze(-1)
+            max_pool = F.adaptive_max_pool2d(x[i].detach(), output_size=1).squeeze(-1).squeeze(-1)
             # print(max_pool.shape)
             fusion_score = self.act(self.linears[i](max_pool).squeeze(-1))
             # print(fusion_score)
