@@ -39,7 +39,7 @@ class AdaptiveStagesFusion(nn.Module):
             # print(fusion_score)
             fusion_scores.append(fusion_score)
         fusion_scores = torch.stack(fusion_scores, dim=1)
-        fusion_scores = F.layer_norm(fusion_scores, fusion_scores.shape[1:])
+        fusion_scores = torch.sigmoid(F.layer_norm(fusion_scores, fusion_scores.shape[1:]))
         # fusion_scores = fusion_scores.max(dim=0)
         if not self.trainable:
             fusion_scores = fusion_scores.detach()
@@ -65,6 +65,9 @@ class AdaptiveStagesFusion(nn.Module):
         # Scale
         if self.scale:
             w = w * self.num_stages
+
+        print('w: ', w)
+
         return w
 
 
@@ -119,7 +122,7 @@ def adap_loss_function(a, b, w_module=None,
     else:
         w = w_module(b)
 
-    print(w[0])
+    # print(w[0])
 
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
