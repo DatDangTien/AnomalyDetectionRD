@@ -125,7 +125,7 @@ def adap_loss_function(a, b, w_module=None,
     # gini = 1 - torch.sum((w / len(w)) ** 2)
     # penalty = 1.0 / gini
     penalty = torch.sum((w / len(w)) ** 2, dim=1)
-    print(penalty.shape)
+    print(penalty)
     penalty = torch.mean(penalty, dim=0)
     print(penalty)
 
