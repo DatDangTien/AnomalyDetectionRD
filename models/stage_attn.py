@@ -124,10 +124,7 @@ def adap_loss_function(a, b, w_module=None,
     # Entropy penalty
     # gini = 1 - torch.sum((w / len(w)) ** 2)
     # penalty = 1.0 / gini
-    penalty = torch.sum((w / w.shape[1]) ** 2, dim=1)
-    print(penalty)
-    penalty = torch.mean(penalty, dim=0)
-    print(penalty)
+    penalty = torch.mean(torch.sum((w / w.shape[1]) ** 2, dim=1), dim=0)
 
     # Weight loss with entropy
     loss = loss + w_entropy * penalty
@@ -155,7 +152,6 @@ def cal_anomaly_map(a,b, w_module=None, out_size=224, amap_mode='mul'):
         a_map = torch.unsqueeze(a_map, dim=1)
         a_map = F.interpolate(a_map, size=out_size, mode='bilinear', align_corners=True)
         # Adaptive stage weight
-        print('amap: ', a_map.shape)
         a_map = a_map * w[:, i]
         a_map = a_map[0, 0, :, :].to('cpu').detach().numpy()
         a_map_list.append(a_map)
