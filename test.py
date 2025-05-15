@@ -219,7 +219,7 @@ def test(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStagesFusion(num_stages=3, inverse=weight_inverse, device=device)
+    layer_attn = AdaptiveStagesFusion(num_stages=3, w_alpha=w_alpha, inverse=weight_inverse, device=device)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -305,7 +305,7 @@ def visualize(dataset, _class_):
     encoder_fn, decoder_fn = backbone_module[backbone]
     encoder, bn = encoder_fn(pretrained=True)
     decoder = decoder_fn(pretrained=False)
-    layer_attn = AdaptiveStagesFusion(num_stages=3, inverse=weight_inverse, device=device)
+    layer_attn = AdaptiveStagesFusion(num_stages=3, w_alpha=w_alpha, inverse=weight_inverse, device=device)
     encoder = encoder.to(device)
     encoder.eval()
     bn = bn.to(device)
@@ -608,6 +608,7 @@ def Parser():
     parser.add_argument('-c', '--dclass', type=str, default='', help='Data class.')
     parser.add_argument('-w', '--layer_weights', type=int, default=0,
                         choices=[0,1,2], help='Layer weights flag, 0: no weights, 1: adaptive weight, 2: inverse adaptive weight')
+    parser.add_argument('-wa', '--w_alpha', type=float, default=1, help='Adaptive weight alpha, alpha<1: weight sharper.')
     parser.add_argument('-cr', '--crop', type=bool, default=False, help='Crop GFC images')
     return parser.parse_args()
 
@@ -637,6 +638,7 @@ if __name__ == '__main__':
     weight_inverse = (args.layer_weights == 2)
     use_layer_attn = (args.layer_weights > 0)
     crop = args.crop
+    w_alpha = args.w_alpha
 
     item_list = []
     res_path = ''

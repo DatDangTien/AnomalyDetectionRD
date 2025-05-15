@@ -6,6 +6,7 @@ class AdaptiveStagesFusion(nn.Module):
     def __init__(self,
                  num_stages=4,
                  w_init: float = 1.0,
+                 w_alpha = 1.0,
                  trainable:bool = False,
                  scale: bool = True,
                  inverse: bool = False,
@@ -15,6 +16,7 @@ class AdaptiveStagesFusion(nn.Module):
         self.trainable = trainable
         self.scale = scale
         self.inverse = inverse
+        self.w_alpha = w_alpha
         self.weight = nn.Parameter(torch.full((num_stages,), w_init))
         self.linears = nn.ModuleList()
         self.act = nn.Softplus()
@@ -42,6 +44,8 @@ class AdaptiveStagesFusion(nn.Module):
             fusion_scores = fusion_scores.detach()
         # print('fusion scores: ',fusion_scores)
         w = self.weight if self.trainable else self.weight.detach()
+        # W-Alpha scale
+        w = w * self.w_alpha
 
         # Inverse
         if self.inverse:
