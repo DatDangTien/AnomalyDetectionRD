@@ -41,9 +41,6 @@ class AdaptiveStagesFusion(nn.Module):
         if not self.trainable:
             fusion_scores = fusion_scores.detach()
         # print('fusion scores: ',fusion_scores)
-
-
-
         w = self.weight if self.trainable else self.weight.detach()
 
         # Inverse
@@ -53,7 +50,11 @@ class AdaptiveStagesFusion(nn.Module):
         # Feature scale
         if self.trainable:
             w = (w * fusion_scores)
-            print('w*fusion: ', w.shape)
+        else:
+            # Expand to [B, N]
+            w = w.expand(x.shape[0], -1)
+
+        print(w.shape)
 
         # Normalize
         w = w.softmax(dim=1)
@@ -61,6 +62,7 @@ class AdaptiveStagesFusion(nn.Module):
         if self.scale:
             w = w * self.num_stages
         return w
+
 
     def _init_linears(self, x):
         for feat in x:
