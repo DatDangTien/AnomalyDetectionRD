@@ -52,7 +52,7 @@ class AdaptiveStagesFusion(nn.Module):
             w = (w * fusion_scores)
         else:
             # Expand to [B, N]
-            w = w.expand(x.shape[0], -1)
+            w = w.expand(x[0].shape[0], -1)
 
         print(w.shape)
 
