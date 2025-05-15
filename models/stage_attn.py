@@ -158,7 +158,7 @@ def cal_anomaly_map(a,b, w_module=None, out_size=224, amap_mode='mul'):
         a_map = F.interpolate(a_map, size=out_size, mode='bilinear', align_corners=True)
         # Adaptive stage weight
         print('amap: ', a_map.shape)
-        a_map = a_map * w[i]
+        a_map = a_map * w[:, i]
         a_map = a_map[0, 0, :, :].to('cpu').detach().numpy()
         a_map_list.append(a_map)
         if amap_mode == 'mul':
