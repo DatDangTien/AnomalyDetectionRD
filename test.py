@@ -402,7 +402,6 @@ def visualize(dataset, _class_):
                 gt = gt.cpu().numpy().astype(int).squeeze((0,1))*255
                 cv2.imwrite('{}{}_{}.png'.format(result_gt, count, typ[0]), gt)
 
-            print(len(amp_list))
             for index, amap in enumerate(amp_list):
                 stage_ano_map = min_max_norm(amap)
                 stage_ano_map = np.uint8(cvt2heatmap(stage_ano_map * 255))
