@@ -39,6 +39,7 @@ class AdaptiveStagesFusion(nn.Module):
             # print(fusion_score)
             fusion_scores.append(fusion_score)
         fusion_scores = torch.stack(fusion_scores, dim=1)
+        fusion_scores = F.layer_norm(fusion_scores, fusion_scores.shape[1:])
         # fusion_scores = fusion_scores.max(dim=0)
         if not self.trainable:
             fusion_scores = fusion_scores.detach()
