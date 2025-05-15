@@ -368,7 +368,7 @@ def visualize(dataset, _class_):
             else:
                 ano_map = threshold_norm(anomaly_map, 0.2, 0.05)
 
-            img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
+            # img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_RGB2BGR)
             # Padding with uncropped image
             if dataset == 'gfc' and crop:
                 uncrop_img = np.array(test_data_ori[idx][0])
