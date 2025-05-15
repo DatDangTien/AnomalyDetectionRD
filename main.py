@@ -255,7 +255,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
             # Inverse back for training
             # layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
             print('\tAUROC_AD, AP_AD, AUROC_AL, PRO, AP_AL, Overkill, Underkill\n')
-            print(' '.join(eva))
+            print(' '.join([str(met) for met in eva]))
 
             if patience == 0:
                 torch.save({'bn': bn.state_dict(),
