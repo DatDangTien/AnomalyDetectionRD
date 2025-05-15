@@ -608,7 +608,7 @@ def Parser():
     parser.add_argument('-c', '--dclass', type=str, default='', help='Data class.')
     parser.add_argument('-w', '--layer_weights', type=int, default=0,
                         choices=[0,1,2], help='Layer weights flag, 0: no weights, 1: adaptive weight, 2: inverse adaptive weight')
-    parser.add_argument('-wa', '--w_alpha', type=float, default=1, help='Adaptive weight alpha, alpha<1: weight sharper.')
+    parser.add_argument('-wa', '--w_alpha', type=float, default=1, help='Adaptive weight alpha, alpha > 1: weight sharper.')
     parser.add_argument('-cr', '--crop', type=bool, default=False, help='Crop GFC images')
     return parser.parse_args()
 

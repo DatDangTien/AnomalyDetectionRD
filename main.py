@@ -313,7 +313,7 @@ def Parser():
     parser.add_argument('-c', '--dclass', type=str, default='', help='Data class.')
     parser.add_argument('-w', '--layer_weights', type=int, default=0,
                         choices=[0,1,2], help='Layer weights flag, 0: no weights, 1: adaptive weight, 2: inverse adaptive weight')
-    parser.add_argument('-wa', '--w_alpha', type=float, default=1, help='Adaptive weight alpha, alpha<1: weight sharper.')
+    parser.add_argument('-wa', '--w_alpha', type=float, default=1, help='Adaptive weight alpha, alpha > 1: weight sharper.')
     parser.add_argument('-s', '--seed', type=int, default=111, help='Seed number')
     parser.add_argument('-e', '--epochs', type=int, default=200, help='Number of train epochs')
     parser.add_argument('-fe', '--fusion_epochs', type=int, default=40, help='Number of fusion epochs')
