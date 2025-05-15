@@ -54,8 +54,6 @@ class AdaptiveStagesFusion(nn.Module):
             # Expand to [B, N]
             w = w.expand(x[0].shape[0], -1)
 
-        print(w.shape)
-
         # Normalize
         w = w.softmax(dim=1)
         # Scale
@@ -115,12 +113,9 @@ def adap_loss_function(a, b, w_module=None,
     else:
         w = w_module(b)
 
-    # print('w: ', w)
-
 
     loss = torch.tensor(0.0, device=device)
     for item in range(len(a)):
-        print(w[:, item].shape)
         stage_loss = torch.mean(w[:, item] * (1 - cos_loss(a[item].view(a[item].shape[0], -1),
                                                            b[item].view(b[item].shape[0], -1))))
         # loss = loss + w[item] * stage_loss
@@ -130,6 +125,7 @@ def adap_loss_function(a, b, w_module=None,
     # gini = 1 - torch.sum((w / len(w)) ** 2)
     # penalty = 1.0 / gini
     penalty = torch.mean(torch.sum((w / len(w)) ** 2, dim=1), dim=0)
+    print(penalty)
 
     # Weight loss with entropy
     loss = loss + w_entropy * penalty
