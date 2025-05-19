@@ -870,8 +870,11 @@ class DeMambaVisionLayer(nn.Module):
             transformer_blocks: list of transformer blocks.
         """
         super().__init__()
-        self.upsample = Upsample(dim=dim) if upsample else None
-        dim = dim // 2 if upsample else dim
+        if upsample:
+            self.upsample = Upsample(dim=dim)
+            dim = dim // 2
+        else:
+            self.upsample = None
         self.conv = conv
         self.transformer_block = False
         if conv:
@@ -1022,11 +1025,11 @@ class DeMambaVision(nn.Module):
         """
         feature = []
         # print('----------------')
-        # print(x.shape)
+        print('BN: ', x.shape)
         # feature.append(x)
         for level in self.levels[:3]:
             x = level(x)
-            # print(x.shape)
+            print('D ', x.shape)
             feature.append(x)
         # print('----------------')
 
