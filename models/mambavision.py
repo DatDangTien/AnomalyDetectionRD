@@ -795,7 +795,7 @@ class BN_layer_mamba(nn.Module):
         # C = 1024 * 3 -> 1024
         self.downsample = nn.Sequential(
             nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** num_stages, kernel_size=3, stride=2, padding=1),
-            LayerNorm(dim * 2 ** (num_stages + 1), eps=norm_eps),
+            LayerNorm(dim * 2 ** num_stages, eps=norm_eps),
         )
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
         self.oce = nn.Sequential(
