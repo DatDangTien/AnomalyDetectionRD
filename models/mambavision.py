@@ -747,7 +747,7 @@ class BN_layer_resnet(nn.Module):
                                      base_width=128,
                                      norm_layer=self.norm))
         for _ in range(1, depths[-1]):
-            layers.append(AttnBottleneck(dim * (2 ** num_stages + 1),       #2048
+            layers.append(AttnBottleneck(dim * 2 ** (num_stages + 1),       #2048
                                          planes=dim * 2 ** (num_stages - 1), #512
                                          base_width=128,
                                          norm_layer=self.norm))
