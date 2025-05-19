@@ -751,7 +751,7 @@ class BN_layer_resnet(nn.Module):
                                       planes=dim * 2 ** (num_stages - 1), #512
                                       base_width=128,
                                       norm_layer=self.norm))
-        oce = nn.Sequential(*layers)
+        self.oce = nn.Sequential(*layers)
 
 
     # Multiscale feature fusion
