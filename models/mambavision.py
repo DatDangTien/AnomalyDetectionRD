@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch.hub import load_state_dict_from_url
 from models.convnext import DropPath, LayerNorm
 from models.convnext import Block as ConvNeXtBlock
+from models.resnet import AttnBottleneck
 import math
 from functools import partial
 from einops import rearrange, repeat
@@ -675,31 +676,12 @@ class BN_layer(nn.Module):
                 conv.append(nn.GELU())
             self.mff.append(nn.Sequential(*conv))
 
-        # C = 1024 * 3 -> 1024
+        # C = 1024 * 3 -> 2048
         self.downsample = nn.Sequential(
             nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages + 1), kernel_size=3, stride=2, padding=1),
             LayerNorm(dim * 2 ** (num_stages + 1), eps=norm_eps),
         )
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
-        # self.oce = nn.Sequential(
-        #     *[MambaVisionLayer(
-        #         dim=int(dim * 2 ** num_stages),
-        #         depth=depths[-1],
-        #         num_heads=num_heads[-1],
-        #         window_size=window_size[-1],
-        #         mlp_ratio=mlp_ratio,
-        #         qkv_bias=qkv_bias,
-        #         qk_scale=qk_scale,
-        #         conv=False,
-        #         drop=drop_rate,
-        #         attn_drop=attn_drop_rate,
-        #         # drop_path=dpr[sum(depths[:i]):sum(depths[:i + 1])],
-        #         downsample=False,
-        #         layer_scale=layer_scale,
-        #         layer_scale_conv=layer_scale_conv,
-        #         transformer_blocks=list(range(math.ceil(depths[-1] / 2), depths[-1])),
-        #         ) for _ in range(depths[-1])]
-        # )
         self.oce = nn.Sequential(
             *[ConvNeXtBlock(
                 dim=dim * 2 ** (num_stages + 1),
@@ -719,6 +701,134 @@ class BN_layer(nn.Module):
         # print(x.shape)
         x = self.oce(x)
         # print(x.shape)
+        return x
+
+
+class BN_layer_resnet(nn.Module):
+    def __init__(self,
+                 dim,
+                 depths,
+                 window_size,
+                 mlp_ratio,
+                 num_heads,
+                 num_stages = 3,
+                 drop_path_rate=0.2,
+                 qkv_bias=True,
+                 qk_scale=None,
+                 drop_rate=0.,
+                 attn_drop_rate=0.,
+                 layer_scale=None,
+                 layer_scale_conv=None,
+                 **kwargs):
+        super().__init__()
+        self.mff = nn.ModuleList()
+        norm_eps = 1e-5
+        for i in range(num_stages):
+            conv = []
+            for j in range(i + 1, num_stages):
+                conv.append(nn.Conv2d(dim * 2 ** j, dim * 2 ** (j+1),
+                                      kernel_size=3, stride=2, padding=1))
+                conv.append(LayerNorm(dim * 2 ** (j+1), eps=norm_eps))
+                conv.append(nn.GELU())
+            self.mff.append(nn.Sequential(*conv))
+
+        self.norm = nn.BatchNorm2d
+        downsample = nn.Sequential(
+            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages + 1), kernel_size=1, stride=2),
+            self.norm(dim * 2 ** (num_stages + 1))
+        )
+        # C = 1024 * 3 -> 1024 * 2
+
+        layers = []
+        layers.append(AttnBottleneck(dim * (2 ** num_stages) * num_stages,     #1024 * 3
+                                  planes=dim * 2 ** (num_stages - 1),    #512
+                                  stride=2,
+                                  downsample=downsample,
+                                  base_width=128,
+                                  norm_layer=self.norm))
+        for _ in range(1, depths[-1]):
+            layers.append(AttnBottleneck(dim * (2 ** num_stages + 1),  #2048
+                                      planes=dim * 2 ** (num_stages - 1), #512
+                                      base_width=128,
+                                      norm_layer=self.norm))
+        oce = nn.Sequential(*layers)
+
+
+    # Multiscale feature fusion
+    def forward(self, x: List[Tensor]) -> Tensor:
+        # print('BN_________________')
+        x = [self.mff[i](x[i]) for i in range(len(x))]
+        x = torch.cat(x, dim=1)
+        print('MFF ',x.shape)
+        x = self.oce(x)
+        print('OCE ',x.shape)
+        return x
+
+class BN_layer_mamba(nn.Module):
+    def __init__(self,
+                 dim,
+                 depths,
+                 window_size,
+                 mlp_ratio,
+                 num_heads,
+                 num_stages = 3,
+                 drop_path_rate=0.2,
+                 qkv_bias=True,
+                 qk_scale=None,
+                 drop_rate=0.,
+                 attn_drop_rate=0.,
+                 layer_scale=None,
+                 layer_scale_conv=None,
+                 **kwargs):
+        super().__init__()
+        self.mff = nn.ModuleList()
+        norm_eps = 1e-5
+        for i in range(num_stages):
+            conv = []
+            for j in range(i + 1, num_stages):
+                conv.append(nn.Conv2d(dim * 2 ** j, dim * 2 ** (j+1),
+                                      kernel_size=3, stride=2, padding=1))
+                conv.append(LayerNorm(dim * 2 ** (j+1), eps=norm_eps))
+                conv.append(nn.GELU())
+            self.mff.append(nn.Sequential(*conv))
+
+        # C = 1024 * 3 -> 1024
+        self.downsample = nn.Sequential(
+            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages + 1), kernel_size=3, stride=2, padding=1),
+            LayerNorm(dim * 2 ** (num_stages + 1), eps=norm_eps),
+        )
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
+        self.oce = nn.Sequential(
+            *[MambaVisionLayer(
+                dim=int(dim * 2 ** (num_stages+1)),
+                depth=depths[-1],
+                num_heads=num_heads[-1],
+                window_size=window_size[-1],
+                mlp_ratio=mlp_ratio,
+                qkv_bias=qkv_bias,
+                qk_scale=qk_scale,
+                conv=False,
+                drop=drop_rate,
+                attn_drop=attn_drop_rate,
+                # drop_path=dpr[sum(depths[:i]):sum(depths[:i + 1])],
+                downsample=False,
+                layer_scale=layer_scale,
+                layer_scale_conv=layer_scale_conv,
+                transformer_blocks=list(range(math.ceil(depths[-1] / 2), depths[-1])),
+                ) for _ in range(depths[-1])]
+        )
+
+
+    # Multiscale feature fusion
+    def forward(self, x: List[Tensor]) -> Tensor:
+        # print('BN_________________')
+        x = [self.mff[i](x[i]) for i in range(len(x))]
+        x = torch.cat(x, dim=1)
+        print('MFF: ', x.shape)
+        x = self.downsample(x)
+        print('Downsample: ', x.shape)
+        x = self.oce(x)
+        print('OCE: ', x.shape)
         return x
 
 
@@ -989,7 +1099,7 @@ def mambavision_s(
     if pretrained:
         model.load(model_urls['mambavision_s'])
 
-    bn = BN_layer(
+    bn = BN_layer_mamba(
         dim=dim,
         depths=depths,
         window_size=window_size,
