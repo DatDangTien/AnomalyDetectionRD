@@ -759,9 +759,9 @@ class BN_layer_resnet(nn.Module):
         # print('BN_________________')
         x = [self.mff[i](x[i]) for i in range(len(x))]
         x = torch.cat(x, dim=1)
-        print('MFF ',x.shape)
+        # print('MFF ',x.shape)
         x = self.oce(x)
-        print('OCE ',x.shape)
+        # print('OCE ',x.shape)
         return x
 
 class BN_layer_mamba(nn.Module):
