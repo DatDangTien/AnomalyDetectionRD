@@ -1099,7 +1099,7 @@ def mambavision_s(
     if pretrained:
         model.load(model_urls['mambavision_s'])
 
-    bn = BN_layer_mamba(
+    bn = BN_layer_resnet(
         dim=dim,
         depths=depths,
         window_size=window_size,
