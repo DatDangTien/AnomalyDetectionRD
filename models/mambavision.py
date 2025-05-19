@@ -979,8 +979,8 @@ class DeMambaVision(nn.Module):
         for i in range(len(depths)):
             conv = True if (i < 2) else False
             level = DeMambaVisionLayer(
-                    # dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
-                    dim=int(dim * 2 ** (len(depths) - i + 1)),
+                    dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
+                    # dim=int(dim * 2 ** (len(depths) - i + 1)),
                     depth=depths[i],
                     num_heads=num_heads[i],
                     window_size=window_size[i],
