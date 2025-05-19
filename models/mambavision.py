@@ -794,13 +794,13 @@ class BN_layer_mamba(nn.Module):
 
         # C = 1024 * 3 -> 1024
         self.downsample = nn.Sequential(
-            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages + 1), kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** num_stages, kernel_size=3, stride=2, padding=1),
             LayerNorm(dim * 2 ** (num_stages + 1), eps=norm_eps),
         )
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
         self.oce = nn.Sequential(
             *[MambaVisionLayer(
-                dim=int(dim * 2 ** (num_stages+1)),
+                dim=int(dim * 2 ** num_stages),
                 depth=depths[-1],
                 num_heads=num_heads[-1],
                 window_size=window_size[-1],
@@ -990,7 +990,7 @@ class DeMambaVision(nn.Module):
                     # drop_path=dpr[sum(depths[:i+1])-1:sum(depths[:i])-1 : -1],
                     # drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])][::-1],
                     drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])],
-                    upsample=True,
+                    upsample=(i > 0),
                     layer_scale=layer_scale,
                     layer_scale_conv=layer_scale_conv,
                     transformer_blocks=list(range(math.ceil(depths[i] / 2),depths[i])),
