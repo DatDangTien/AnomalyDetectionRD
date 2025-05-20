@@ -52,7 +52,7 @@ class AdaptiveStagesFusion(nn.Module):
 
         w = self.weight if self.trainable else self.weight.detach()
         # Abs the w
-        w = torch.abs(w)
+        w = self.act(w)
 
 
         # W-Alpha scale
