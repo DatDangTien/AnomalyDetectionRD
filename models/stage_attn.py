@@ -83,7 +83,7 @@ class AdaptiveStagesFusion(nn.Module):
     def _init_linears(self, x):
         for feat in x:
             self.linears.append(nn.Sequential(
-                # nn.LayerNorm(feat.shape[1], device=self.device),
+                nn.LayerNorm(feat.shape[1], device=self.device),
                 nn.Linear(feat.shape[1], 1, device=self.device)
             ))
 
