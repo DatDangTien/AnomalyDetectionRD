@@ -979,8 +979,8 @@ class DeMambaVision(nn.Module):
         for i in range(len(depths)):
             conv = True if (i > 0) else False
             level = DeMambaVisionLayer(
-                    dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
-                    # dim=int(dim * 2 ** (len(depths) - i + 1)),
+                    # dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
+                    dim=int(dim * 2 ** (len(depths) - i + 1)),
                     depth=depths[i],
                     num_heads=num_heads[i],
                     window_size=window_size[i],
@@ -993,8 +993,8 @@ class DeMambaVision(nn.Module):
                     # drop_path=dpr[sum(depths[:i+1])-1:sum(depths[:i])-1 : -1],
                     # drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])][::-1],
                     drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])],
-                    upsample=(i > 0),
-                    # upsample=True,
+                    # upsample=(i > 0),
+                    upsample=True,
                     layer_scale=layer_scale,
                     layer_scale_conv=layer_scale_conv,
                     transformer_blocks=list(range(math.ceil(depths[i] / 2),depths[i])),
@@ -1102,7 +1102,7 @@ def mambavision_s(
     if pretrained:
         model.load(model_urls['mambavision_s'])
 
-    bn = BN_layer_mamba(
+    bn = BN_layer_resnet(
         dim=dim,
         depths=depths,
         window_size=window_size,
