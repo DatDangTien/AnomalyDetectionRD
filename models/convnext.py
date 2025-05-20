@@ -259,9 +259,9 @@ class De_ConvNeXt(nn.Module):
         # print('Decoder__________________')
         for i in range(self.num_states):
             # print(x.shape)
-            x = self.stages[i](x)
-            # print(x.shape)
             x = self.upsample_layers[i](x)
+            # print(x.shape)
+            x = self.stages[i](x)
             # print(x.shape)
             feature.append(x)
         # print(len(feature))
