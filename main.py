@@ -301,6 +301,14 @@ def train(dataset, _class_, filter=None, filter_name=None):
         #         f.write('Evaluation: auroc_px, auroc_sp, aupro_px, ap_px, ap_sp\n')
         #         f.write('epoch [{} / {}]'.format(epoch + 1, epochs) + ' '.join([str(i) for i in eva[:-2]]) + '\n')
 
+    predict_path = f'./result/{dataset}/{backbone}/predict/'
+    if not os.path.isdir(predict_path):
+        os.makedirs(predict_path)
+    predict_path += _class_ + '_predict.txt'
+
+    final_eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn, predict=predict_path)
+    print(' '.join([str(met) for met in final_eva]))
+
     with open(train_log_path, 'a') as f:
         f.write('Loading time: {}\nTraining time: {}\n'.format(round(train_time-start_time, 5), round(time.time()-train_time, 5)))
     with open(loss_path, 'wb') as f:
