@@ -1025,10 +1025,10 @@ class DeMambaVision(nn.Module):
         """
         feature = []
         # print('----------------')
-        print('BN: ', x.shape)
+        # print('BN: ', x.shape)
         for level in self.levels:
             x = level(x)
-            print('D ', x.shape)
+            # print('D ', x.shape)
             feature.append(x)
         # print('----------------')
 
