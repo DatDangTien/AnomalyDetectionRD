@@ -219,18 +219,14 @@ class De_ConvNeXt(nn.Module):
         super().__init__()
         self.num_states = num_states
         # Reverse dims
-        dims = dims[:num_states]
         dims = dims[::-1]   # Reverse dims -> [768, 384, 192, 96]
         self.upsample_layers = nn.ModuleList()  # stem and 3 intermediate downsampling conv layers
-        self.upsample_layers.append(nn.Sequential(
-            nn.ConvTranspose2d(dims[0]*2, dims[0], kernel_size=2, stride=2),
-            LayerNorm(dims[0], eps=norm_eps)
-        ))
-        for i in range(num_states-1):
+        for i in range(num_states):
             self.upsample_layers.append(nn.Sequential(
                 nn.ConvTranspose2d(dims[i], dims[i + 1], kernel_size=2, stride=2),
                 LayerNorm(dims[i + 1], eps=norm_eps),
             ))
+        dims = dims[1:]  # Remove the first dim for bn stage
 
         self.stages = nn.ModuleList()  # 4 feature resolution stages, each consisting of multiple residual blocks
         # Stochastic depth
@@ -238,7 +234,7 @@ class De_ConvNeXt(nn.Module):
         cur = 0
         for i in range(num_states):
             stage = nn.Sequential(
-                *[Block(dim=dims[i]*2, drop_path=dp_rates[cur + j],
+                *[Block(dim=dims[i], drop_path=dp_rates[cur + j],
                         layer_scale_init_value=layer_scale_init_value,
                         norm_eps=norm_eps) for j in range(depths[i])]
             )
