@@ -976,7 +976,7 @@ class DeMambaVision(nn.Module):
         # window_size = window_size[:-1]
         dpr = [x.item() for x in torch.linspace(drop_path_rate, 0, sum(depths))]
         self.levels = nn.ModuleList([])
-        for i in range(len(depths)-1):
+        for i in range(len(depths)):
             conv = True if (i > 0) else False
             level = DeMambaVisionLayer(
                     dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
