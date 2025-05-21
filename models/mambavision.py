@@ -684,7 +684,7 @@ class BN_layer(nn.Module):
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
         self.oce = nn.Sequential(
             *[ConvNeXtBlock(
-                dim=dim * 2 ** (num_stages + 1),
+                dim=dim * 2 ** (num_stages),
                 drop_path=dpr[i],
                 layer_scale_init_value=0 if layer_scale_conv is None else layer_scale_conv,
                 norm_eps=norm_eps,
