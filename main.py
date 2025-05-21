@@ -248,7 +248,7 @@ def train(dataset, _class_, filter=None, filter_name=None):
                 if name.replace('module','').startswith('weight'):
                     print(f'{name}: {value.data}\n')
 
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 100 == 0:
             # Inverse adap weight for evaluation
             # layer_attn.module.set_inverse() if isinstance(layer_attn, DP) else layer_attn.set_inverse()
             eva = evaluation(encoder, bn, decoder, test_dataloader, device, layer_attn)
@@ -390,8 +390,11 @@ if __name__ == '__main__':
         if args.dclass != '':
             item_list = [args.dclass]
         else:
-            item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
+            # item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
+                         # 'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
+            item_list = ['capsule', 'grid', 'pill',
                          'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
+                         
         res_path = f'./result/mvtec/'
     else:
         # gfc dataset only 1 class
