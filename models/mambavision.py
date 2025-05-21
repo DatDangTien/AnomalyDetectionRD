@@ -679,7 +679,7 @@ class BN_layer(nn.Module):
         # C = 1024 * 3 -> 2048
         self.downsample = nn.Sequential(
             nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** num_stages, kernel_size=3, padding=1),
-            LayerNorm(dim * 2 ** (num_stages + 1), eps=norm_eps),
+            LayerNorm(dim * 2 ** (num_stages), eps=norm_eps),
         )
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
         self.oce = nn.Sequential(
@@ -735,7 +735,7 @@ class BN_layer_resnet(nn.Module):
         self.norm = nn.BatchNorm2d
         downsample = nn.Sequential(
             nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages), kernel_size=1),
-            self.norm(dim * 2 ** (num_stages + 1))
+            self.norm(dim * 2 ** (num_stages))
         )
         # C = 1024 * 3 -> 1024 * 2
 
