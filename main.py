@@ -390,11 +390,8 @@ if __name__ == '__main__':
         if args.dclass != '':
             item_list = [args.dclass]
         else:
-            # item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
-                         # 'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
-            item_list = ['capsule', 'grid', 'pill',
+            item_list = ['carpet', 'bottle', 'hazelnut', 'leather', 'cable', 'capsule', 'grid', 'pill',
                          'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper', 'tile', 'wood']
-                         
         res_path = f'./result/mvtec/'
     else:
         # gfc dataset only 1 class

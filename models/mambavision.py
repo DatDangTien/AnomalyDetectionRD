@@ -1217,7 +1217,7 @@ def mambavision_b21k(
     )
     if pretrained:
         model.load(model_urls['mambavision_b21k'])
-    bn = BN_layer(
+    bn = BN_layer_resnet(
         dim=dim,
         depths=depths,
         window_size=window_size,

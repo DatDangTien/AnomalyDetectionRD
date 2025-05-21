@@ -197,7 +197,7 @@ def test(dataset, _class_):
     hist_path = f'./result/{dataset}/{backbone}/hist/'
     if not os.path.isdir(hist_path):
         os.makedirs(hist_path)
-    hist_path += '{_class_}.png'
+    hist_path += f'{_class_}.png'
 
     # # Load preprocess metadata
     # try:
@@ -463,152 +463,8 @@ def compute_pro(masks: ndarray, amaps: ndarray, num_th: int = 200) -> None:
     pro_auc = auc(df["fpr"], df["pro"])
     return pro_auc
 
-
-# def vis_nd(name, _class_):
-#     print(name,':',_class_)
-#     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-#     print(device)
-#
-#     ckp_path = './checkpoints/' + name + '_' + str(_class_) + '.pth'
-#     train_dataloader, test_dataloader = load_data(name, _class_, batch_size=16)
-#
-#     encoder, bn = resnet18(pretrained=True)
-#     encoder = encoder.to(device)
-#     bn = bn.to(device)
-#     encoder.eval()
-#     decoder = de_resnet18(pretrained=False)
-#     decoder = decoder.to(device)
-#
-#     ckp = torch.load(ckp_path, map_location=device)
-#
-#     decoder.load_state_dict(ckp['decoder'])
-#     bn.load_state_dict(ckp['bn'])
-#     decoder.eval()
-#     bn.eval()
-#
-#     gt_list_sp = []
-#     prmax_list_sp = []
-#     prmean_list_sp = []
-#
-#     count = 0
-#     with torch.no_grad():
-#         for img, label in test_dataloader:
-#             if img.shape[1] == 1:
-#                 img = img.repeat(1, 3, 1, 1)
-#             #if count <= 10:
-#             #    count += 1
-#             #    continue
-#             img = img.to(device)
-#             inputs = encoder(img)
-#             #print(inputs[-1].shape)
-#             outputs = decoder(bn(inputs))
-#
-#
-#             anomaly_map, amap_list = cal_anomaly_map(inputs, outputs, out_size=img.shape[-1], amap_mode='a')
-#             #anomaly_map = gaussian_filter(anomaly_map, sigma=4)
-#             ano_map = min_max_norm(anomaly_map)
-#             ano_map = cvt2heatmap(ano_map*255)
-#             img = cv2.cvtColor(img.permute(0, 2, 3, 1).cpu().numpy()[0] * 255, cv2.COLOR_BGR2RGB)
-#             img = np.uint8(min_max_norm(img)*255)
-#             cv2.imwrite('./nd_results/'+name+'_'+str(_class_)+'_'+str(count)+'_'+'org.png',img)
-#             #plt.imshow(img)
-#             #plt.axis('off')
-#             #plt.savefig('org.png')
-#             #plt.show()
-#             ano_map = show_cam_on_image(img, ano_map)
-#             cv2.imwrite('./nd_results/'+name+'_'+str(_class_)+'_'+str(count)+'_'+'ad.png', ano_map)
-#             #plt.imshow(ano_map)
-#             #plt.axis('off')
-#             #plt.savefig('ad.png')
-#             #plt.show()
-#
-#             #gt = gt.cpu().numpy().astype(int)[0][0]*255
-#             #cv2.imwrite('./results/'+_class_+'_'+str(count)+'_'+'gt.png', gt)
-#
-#             #b, c, h, w = inputs[2].shape
-#             #t_feat = F.normalize(inputs[2], p=2).view(c, -1).permute(1, 0).cpu().numpy()
-#             #s_feat = F.normalize(outputs[2], p=2).view(c, -1).permute(1, 0).cpu().numpy()
-#             #c = 1-min_max_norm(cv2.resize(anomaly_map,(h,w))).flatten()
-#             #print(c.shape)
-#             #t_sne([t_feat, s_feat], c)
-#             #assert 1 == 2
-#
-#             #name = 0
-#             #for anomaly_map in amap_list:
-#             #    anomaly_map = gaussian_filter(anomaly_map, sigma=4)
-#             #    ano_map = min_max_norm(anomaly_map)
-#             #    ano_map = cvt2heatmap(ano_map * 255)
-#                 #ano_map = show_cam_on_image(img, ano_map)
-#                 #cv2.imwrite(str(name) + '.png', ano_map)
-#                 #plt.imshow(ano_map)
-#                 #plt.axis('off')
-#                 #plt.savefig(str(name) + '.png')
-#                 #plt.show()
-#             #    name+=1
-#             #count += 1
-#             #if count>40:
-#             #    return 0
-#                 #assert 1==2
-#             gt_list_sp.extend(label.cpu().data.numpy())
-#             prmax_list_sp.append(np.max(anomaly_map))
-#             prmean_list_sp.append(np.sum(anomaly_map))  # np.sum(anomaly_map.ravel().argsort()[-1:][::-1]))
-#
-#         gt_list_sp = np.array(gt_list_sp)
-#         indx1 = gt_list_sp == _class_
-#         indx2 = gt_list_sp != _class_
-#         gt_list_sp[indx1] = 0
-#         gt_list_sp[indx2] = 1
-#
-#         ano_score = (prmean_list_sp-np.min(prmean_list_sp))/(np.max(prmean_list_sp)-np.min(prmean_list_sp))
-#         vis_data = {}
-#         vis_data['Anomaly Score'] = ano_score
-#         vis_data['Ground Truth'] = np.array(gt_list_sp)
-#         #print(type(vis_data))
-#         #np.save('vis.npy',vis_data)
-#         with open('vis.pkl','wb') as f:
-#             pickle.dump(vis_data,f,pickle.HIGHEST_PROTOCOL)
-#
-#
-# def detection(encoder, bn, decoder, dataloader,device,_class_):
-#     #_, t_bn = resnet50(pretrained=True)
-#     bn.load_state_dict(bn.state_dict())
-#     bn.eval()
-#     #t_bn.to(device)
-#     #t_bn.load_state_dict(bn.state_dict())
-#     decoder.eval()
-#     gt_list_sp = []
-#     prmax_list_sp = []
-#     prmean_list_sp = []
-#     with torch.no_grad():
-#         for img, label in dataloader:
-#
-#             img = img.to(device)
-#             if img.shape[1] == 1:
-#                 img = img.repeat(1, 3, 1, 1)
-#             label = label.to(device)
-#             inputs = encoder(img)
-#             outputs = decoder(bn(inputs))
-#             anomaly_map, _ = cal_anomaly_map(inputs, outputs, out_size=img.shape[-1], 'acc')
-#             anomaly_map = gaussian_filter(anomaly_map, sigma=4)
-#
-#
-#             gt_list_sp.extend(label.cpu().data.numpy())
-#             prmax_list_sp.append(np.max(anomaly_map))
-#             prmean_list_sp.append(np.sum(anomaly_map))#np.sum(anomaly_map.ravel().argsort()[-1:][::-1]))
-#
-#         gt_list_sp = np.array(gt_list_sp)
-#         indx1 = gt_list_sp == _class_
-#         indx2 = gt_list_sp != _class_
-#         gt_list_sp[indx1] = 0
-#         gt_list_sp[indx2] = 1
-#
-#
-#         auroc_sp_max = round(roc_auc_score(gt_list_sp, prmax_list_sp), 4)
-#         auroc_sp_mean = round(roc_auc_score(gt_list_sp, prmean_list_sp), 4)
-#     return auroc_sp_max, auroc_sp_mean
-
 def Parser():
-    parser = ArgumentParser(description="Train RD4AD model")
+    parser = ArgumentParser(description="Test RD4AD model")
     parser.add_argument('-f', '--func', type=str, default='test',
                         choices=['test', 'visualize', 'visualize_loss'], help='Function to run')
     parser.add_argument('-is', '--image_size', type=int, default=224, help='Image resolution')
