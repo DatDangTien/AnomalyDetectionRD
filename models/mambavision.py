@@ -678,7 +678,7 @@ class BN_layer(nn.Module):
 
         # C = 1024 * 3 -> 2048
         self.downsample = nn.Sequential(
-            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages + 1), kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** num_stages, kernel_size=3, padding=1),
             LayerNorm(dim * 2 ** (num_stages + 1), eps=norm_eps),
         )
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depths[-1])]
@@ -734,21 +734,21 @@ class BN_layer_resnet(nn.Module):
 
         self.norm = nn.BatchNorm2d
         downsample = nn.Sequential(
-            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages + 1), kernel_size=1, stride=2),
+            nn.Conv2d(dim * (2 ** num_stages) * num_stages, dim * 2 ** (num_stages), kernel_size=1),
             self.norm(dim * 2 ** (num_stages + 1))
         )
         # C = 1024 * 3 -> 1024 * 2
 
         layers = []
         layers.append(AttnBottleneck(dim * (2 ** num_stages) * num_stages, #1024 * 3
-                                     planes=dim * 2 ** (num_stages - 1),    #512
-                                     stride=2,
+                                     planes=dim * 2 ** (num_stages - 2),    #512
+                                     stride=1,
                                      downsample=downsample,
                                      base_width=128,
                                      norm_layer=self.norm))
         for _ in range(1, depths[-1]):
-            layers.append(AttnBottleneck(dim * 2 ** (num_stages + 1),       #2048
-                                         planes=dim * 2 ** (num_stages - 1), #512
+            layers.append(AttnBottleneck(dim * 2 ** num_stages,       #2048
+                                         planes=dim * 2 ** (num_stages - 2), #512
                                          base_width=128,
                                          norm_layer=self.norm))
         self.oce = nn.Sequential(*layers)
@@ -979,8 +979,8 @@ class DeMambaVision(nn.Module):
         for i in range(len(depths)):
             conv = True if (i > 0) else False
             level = DeMambaVisionLayer(
-                    # dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
-                    dim=int(dim * 2 ** (len(depths) - i + 1)),
+                    dim=int(dim * 2 ** (len(depths) - i + 1)) if i > 0  else (dim * 2 ** len(depths)),
+                    # dim=int(dim * 2 ** (len(depths) - i + 1)),
                     depth=depths[i],
                     num_heads=num_heads[i],
                     window_size=window_size[i],
@@ -993,8 +993,8 @@ class DeMambaVision(nn.Module):
                     # drop_path=dpr[sum(depths[:i+1])-1:sum(depths[:i])-1 : -1],
                     # drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])][::-1],
                     drop_path=dpr[sum(depths[:i]): sum(depths[:i+1])],
-                    # upsample=(i > 0),
-                    upsample=True,
+                    upsample=(i > 0),
+                    # upsample=True,
                     layer_scale=layer_scale,
                     layer_scale_conv=layer_scale_conv,
                     transformer_blocks=list(range(math.ceil(depths[i] / 2),depths[i])),
