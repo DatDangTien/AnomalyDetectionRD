@@ -139,6 +139,7 @@ def adap_loss_function(a, b, w_module=None,
                                                            b[item].view(b[item].shape[0], -1))))
         # loss = loss + w[item] * stage_loss
         if stage_loss > 1.0:
+            print('W: ', w[0, item])
             print(f'Stage {item} loss: ', stage_loss)
         loss = loss + stage_loss
 
