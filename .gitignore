@@ -1,4 +1,5 @@
 # Ignore folder
+.idea/
 dataset/
 checkpoints/
 result/
