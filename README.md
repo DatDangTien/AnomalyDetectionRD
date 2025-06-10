@@ -1,6 +1,6 @@
 ## Anomaly Detection via Reverse Distillation
 
-This repo is developed from from the official code [RD4AD](https://github.com/hq-deng/RD4AD) by [hq-deng](https://github.com/hq-deng), based on the paper:  
+This repo is developed based on the official code [RD4AD](https://github.com/hq-deng/RD4AD) by [hq-deng](https://github.com/hq-deng), of the paper:  
 
 **Anomaly Detection via Reverse Distillation from One-Class Embedding**  
 Hanqiu Deng and Xingyu Li  
@@ -29,7 +29,7 @@ pip install -r mamba_requirements.txt --no-build-isolation
 ## Usage
 ### Train the model:
 ```commandline
-python main.py 
+python train.py 
     -d <dataset>
     -c <dclass>  
     -be <backbone>
@@ -72,7 +72,7 @@ Visit the folder for saved image: /result/&lt;dataset&gt;/images/
 
 ### Example
 ```commandline
-python main.py -d mvtec -be mambavision-b -w 1 -wa 2.0 -er 0.1 -bs 16 -fe 200
+python train.py -d mvtec -be mambavision-b -w 1 -wa 2.0 -er 0.1 -bs 16 -fe 200
 python test.py -f test -d -d mvtec -be mambavision-b -w 1 -wa 2.0
 python test.py -f visualize -d mvtec -be mambavision-b -w 1 -wa 2.0
 
